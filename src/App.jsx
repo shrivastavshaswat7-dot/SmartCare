@@ -1,21 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import PatientDashboard from './pages/PatientDashboard'
+import BookAppointment from './pages/BookAppointment'
 import ProtectedRoute from './components/ProtectedRoute'
-import { useAuth } from './context/AuthContext'
 import './App.css'
-
-function Dashboard() {
-  const { user, signOut } = useAuth()
-
-  return (
-    <div className="dashboard-placeholder">
-      <h1>🏥 SmartCare</h1>
-      <p>Welcome! You are logged in as <strong>{user?.email}</strong></p>
-      <button onClick={signOut} className="logout-button">Sign Out</button>
-    </div>
-  )
-}
 
 function App() {
   return (
@@ -26,7 +15,15 @@ function App() {
         path="/"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <PatientDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/book-appointment"
+        element={
+          <ProtectedRoute>
+            <BookAppointment />
           </ProtectedRoute>
         }
       />
