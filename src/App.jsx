@@ -3,6 +3,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import PatientDashboard from './pages/PatientDashboard'
 import BookAppointment from './pages/BookAppointment'
+import PatientQueue from './pages/PatientQueue'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
@@ -24,6 +25,14 @@ function App() {
         element={
           <ProtectedRoute>
             <BookAppointment />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/queue"
+        element={
+          <ProtectedRoute>
+            <PatientQueue />
           </ProtectedRoute>
         }
       />

@@ -34,15 +34,24 @@ export function AuthProvider({ children }) {
     })
     if (error) return { data, error }
 
+    // Immediately update context so ProtectedRoute sees the user
+    // before the caller navigates away from /register
+    if (data.user) {
+      setUser(data.user)
+    }
+
     // Create profile row now (user has an active session)
     if (data.user) {
-      await supabase.from('profiles').insert({
+      const { error: profileErr } = await supabase.from('profiles').insert({
         id: data.user.id,
         name,
         email,
         phone,
         role: 'patient',
       })
+      if (profileErr) {
+        console.warn('Profile insert after signup:', profileErr.message)
+      }
     }
 
     return { data, error }
@@ -55,23 +64,32 @@ export function AuthProvider({ children }) {
     })
     if (error) return { data, error }
 
-    // On first login, create the profile row
-    const user = data.user
+    // Immediately update context so ProtectedRoute sees the user
+    // before the caller navigates away from /login
+    if (data.user) {
+      setUser(data.user)
+    }
+
+    // On first login, create the profile row if it doesn't exist yet
+    const authUser = data.user
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('id')
-      .eq('id', user.id)
+      .eq('id', authUser.id)
       .single()
 
     if (!existingProfile) {
-      const meta = user.user_metadata
-      await supabase.from('profiles').insert({
-        id: user.id,
+      const meta = authUser.user_metadata
+      const { error: profileErr } = await supabase.from('profiles').insert({
+        id: authUser.id,
         name: meta.name || '',
-        email: user.email,
+        email: authUser.email,
         phone: meta.phone || '',
         role: 'patient',
       })
+      if (profileErr) {
+        console.warn('Profile insert after login:', profileErr.message)
+      }
     }
 
     return { data, error }

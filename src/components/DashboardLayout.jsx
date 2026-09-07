@@ -23,7 +23,7 @@ function DashboardLayout({ children, title, subtitle }) {
   const navItems = [
     { label: 'Dashboard', path: '/', icon: '📊' },
     { label: 'Book Appointment', path: '/book-appointment', icon: '➕' },
-    { label: 'Live Queue Status', path: '/#queue', icon: '⏳', disabled: false },
+    { label: 'Live Queue Status', path: '/queue', icon: '⏳', disabled: false },
     { label: 'Medical History', path: '/#history', icon: '📁', disabled: false }
   ]
 

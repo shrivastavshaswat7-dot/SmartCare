@@ -128,11 +128,11 @@ function PatientDashboard() {
               <span className="action-link">Book Now →</span>
             </div>
 
-            <div className="action-card">
+            <div className="action-card" onClick={() => navigate('/queue')}>
               <div className="action-icon">⏳</div>
               <h4>Live Queue Tracker</h4>
               <p>Check real-time queue position & wait time</p>
-              <span className="action-badge">Live System</span>
+              <span className="action-link">View Queue →</span>
             </div>
 
             <div className="action-card">
