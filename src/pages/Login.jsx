@@ -7,7 +7,7 @@ import './Auth.css'
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loginRole, setLoginRole] = useState('patient') // 'patient' or 'doctor'
+  const [loginRole, setLoginRole] = useState('patient') // 'patient', 'doctor', or 'admin'
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { signIn } = useAuth()
@@ -34,12 +34,15 @@ function Login() {
         .eq('id', data.user.id)
         .single()
 
-      if (profile?.role === 'admin') {
-        navigate('/admin')
-        return
-      }
-
-      if (loginRole === 'doctor') {
+      if (loginRole === 'admin') {
+        if (profile?.role === 'admin') {
+          navigate('/admin')
+        } else {
+          await supabase.auth.signOut()
+          setError('This account is not registered as an admin.')
+          setLoading(false)
+        }
+      } else if (loginRole === 'doctor') {
         if (profile?.role === 'doctor') {
           navigate('/doctor')
         } else {
@@ -50,7 +53,11 @@ function Login() {
         }
       } else {
         // Patient login selected
-        navigate('/')
+        if (profile?.role === 'admin') {
+          navigate('/admin') // Safest fallback in case an admin logs in as patient
+        } else {
+          navigate('/')
+        }
       }
     } catch {
       navigate('/')
@@ -63,7 +70,7 @@ function Login() {
         <h1 className="auth-title">🏥 SmartCare</h1>
         <h2 className="auth-subtitle">Welcome back</h2>
 
-        <div className="role-selector">
+        <div className="role-selector" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
           <button 
             className={`role-btn ${loginRole === 'patient' ? 'active' : ''}`}
             onClick={() => { setLoginRole('patient'); setError(''); }}
@@ -75,6 +82,12 @@ function Login() {
             onClick={() => { setLoginRole('doctor'); setError(''); }}
           >
             🩺 Doctor Login
+          </button>
+          <button 
+            className={`role-btn ${loginRole === 'admin' ? 'active' : ''}`}
+            onClick={() => { setLoginRole('admin'); setError(''); }}
+          >
+            ⚙️ Admin Login
           </button>
         </div>
 
@@ -106,7 +119,7 @@ function Login() {
           </div>
 
           <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? 'Signing in...' : `Sign In as ${loginRole === 'doctor' ? 'Doctor' : 'Patient'}`}
+            {loading ? 'Signing in...' : `Sign In as ${loginRole === 'admin' ? 'Admin' : loginRole === 'doctor' ? 'Doctor' : 'Patient'}`}
           </button>
         </form>
 
