@@ -1,16 +1,44 @@
-# React + Vite
+# SmartCare Hospital Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SmartCare is a modern, responsive Hospital Management System built with React, Vite, and Supabase. It provides dedicated portals and secure routing for Patients, Doctors, and Hospital Administrators to streamline daily medical operations.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### 🧑‍⚕️ For Patients
+- **Authentication:** Secure Registration and Login.
+- **Dashboard:** Overview of active appointments.
+- **Booking System:** Book appointments with dynamic department-to-doctor filtering.
+- **Live Queue:** Monitor live queue position and estimated waiting time.
+- **Priority Access:** Built-in emergency priority handling.
 
-## React Compiler
+### 🩺 For Doctors
+- **Dedicated Dashboard:** Secure doctor-only access.
+- **Queue Management:** Manage today's patients, call the next patient, and view queue statistics.
+- **Consultation Hub:** Add consultation notes and digital prescriptions directly during the appointment.
+- **Medical History:** View past patient history securely restricted via Row Level Security (RLS).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### ⚙️ For Administrators
+- **Admin Dashboard:** High-level hospital overview and real-time statistics.
+- **Queue Control:** Global queue management, manual overrides, and cancellation control.
 
-## Expanding the ESLint configuration
+## Tech Stack
+- **Frontend:** React, Vite, JavaScript, CSS (Vanilla)
+- **Backend/Database:** Supabase (PostgreSQL, Auth, RLS)
+- **Deployment:** Vercel
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Security
+- Utilizes strict **Row Level Security (RLS)** in Supabase to ensure data isolation.
+- Patients can only access their own appointments.
+- Doctors can only access data pertaining to their specific consultations.
+- Secure token generation using database triggers and advisory locks for absolute concurrency safety.
+
+## Setup Instructions
+
+1. Clone the repository.
+2. Run `npm install` to install dependencies.
+3. Duplicate `.env.example` to `.env` and configure your Supabase URL and Anon Key.
+4. Run the provided `supabase_rls.sql` in your Supabase SQL editor to set up the database schema, triggers, and RLS policies.
+5. Run `npm run dev` to start the local development server.
+
+## License
+MIT License
