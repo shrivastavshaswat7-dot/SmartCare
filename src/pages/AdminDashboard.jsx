@@ -4,6 +4,18 @@ import { supabase } from '../lib/supabase'
 import DashboardLayout from '../components/DashboardLayout'
 import './AdminDashboard.css'
 
+const formatTimeRange = (start, end, fallback) => {
+  if (!start || !end) return fallback ? fallback.slice(0, 5) : '—';
+  const format12 = (time24) => {
+    const [h, m] = time24.split(':')
+    let hrs = parseInt(h, 10)
+    const ampm = hrs >= 12 ? 'PM' : 'AM'
+    hrs = hrs % 12 || 12
+    return `${hrs}:${m} ${ampm}`
+  }
+  return `${format12(start)} – ${format12(end)}`
+}
+
 function AdminDashboard() {
   const navigate = useNavigate()
 
@@ -369,6 +381,7 @@ function AdminDashboard() {
                     <th>Patient</th>
                     <th>Doctor</th>
                     <th>Time</th>
+                    <th>Type</th>
                     <th>Priority</th>
                     <th>Status</th>
                     <th>Action</th>
@@ -414,7 +427,12 @@ function AdminDashboard() {
                             </div>
                           </td>
                           <td>
-                            {appt.appointment_time ? appt.appointment_time.slice(0, 5) : '—'}
+                            {formatTimeRange(appt.slot_start, appt.slot_end, appt.appointment_time)}
+                          </td>
+                          <td>
+                            <span className={`type-badge ${appt.visit_type === 'follow_up' ? 'follow-up' : 'new'}`}>
+                              {appt.visit_type === 'follow_up' ? 'Follow-up' : 'New'}
+                            </span>
                           </td>
                           <td>
                             {isEmergency ? (

@@ -4,6 +4,18 @@ import { supabase } from '../lib/supabase'
 import DashboardLayout from '../components/DashboardLayout'
 import './DoctorQueue.css'
 
+const formatTimeRange = (start, end, fallback) => {
+  if (!start || !end) return fallback ? fallback.slice(0, 5) : '—';
+  const format12 = (time24) => {
+    const [h, m] = time24.split(':')
+    let hrs = parseInt(h, 10)
+    const ampm = hrs >= 12 ? 'PM' : 'AM'
+    hrs = hrs % 12 || 12
+    return `${hrs}:${m} ${ampm}`
+  }
+  return `${format12(start)} – ${format12(end)}`
+}
+
 function DoctorQueue() {
   const { user } = useAuth()
 
@@ -336,7 +348,8 @@ function DoctorQueue() {
                     </h4>
                     <div className="consulting-banner-meta">
                       <span>Token #{currentConsulting.token_number}</span>
-                      <span>🕐 {currentConsulting.appointment_time}</span>
+                      <span>🕐 {formatTimeRange(currentConsulting.slot_start, currentConsulting.slot_end, currentConsulting.appointment_time)}</span>
+                      <span>{currentConsulting.visit_type === 'follow_up' ? 'Follow-up' : 'New'}</span>
                       {(currentConsulting.priority || '').toLowerCase() === 'emergency' && (
                         <span>🚨 Emergency</span>
                       )}
@@ -382,6 +395,7 @@ function DoctorQueue() {
                       <th>Token</th>
                       <th>Patient</th>
                       <th>Time</th>
+                      <th>Type</th>
                       <th>Priority</th>
                       <th>Actions</th>
                     </tr>
@@ -410,7 +424,12 @@ function DoctorQueue() {
                                 )}
                               </div>
                             </td>
-                            <td>{appt.appointment_time}</td>
+                            <td>{formatTimeRange(appt.slot_start, appt.slot_end, appt.appointment_time)}</td>
+                            <td>
+                              <span className={`type-badge ${appt.visit_type === 'follow_up' ? 'follow-up' : 'new'}`}>
+                                {appt.visit_type === 'follow_up' ? 'Follow-up' : 'New'}
+                              </span>
+                            </td>
                             <td>
                               {isEmergency ? (
                                 <span className="priority-badge-emergency">🚨 Emergency</span>
@@ -466,6 +485,7 @@ function DoctorQueue() {
                             <th>Token</th>
                             <th>Patient</th>
                             <th>Time</th>
+                            <th>Type</th>
                             <th>Priority</th>
                             <th>Status</th>
                           </tr>
@@ -480,7 +500,12 @@ function DoctorQueue() {
                                   <span className="table-token-badge">#{appt.token_number}</span>
                                 </td>
                                 <td>{patient?.name || 'Patient'}</td>
-                                <td>{appt.appointment_time}</td>
+                                <td>{formatTimeRange(appt.slot_start, appt.slot_end, appt.appointment_time)}</td>
+                                <td>
+                                  <span className={`type-badge ${appt.visit_type === 'follow_up' ? 'follow-up' : 'new'}`}>
+                                    {appt.visit_type === 'follow_up' ? 'Follow-up' : 'New'}
+                                  </span>
+                                </td>
                                 <td>
                                   {isEmergency ? (
                                     <span className="priority-badge-emergency">🚨 Emergency</span>
@@ -541,6 +566,14 @@ function DoctorQueue() {
                   <div className="modal-info-row">
                     <span className="modal-info-label">Date</span>
                     <span className="modal-info-value">{consultModalAppt.appointment_date}</span>
+                  </div>
+                  <div className="modal-info-row">
+                    <span className="modal-info-label">Time</span>
+                    <span className="modal-info-value">{formatTimeRange(consultModalAppt.slot_start, consultModalAppt.slot_end, consultModalAppt.appointment_time)}</span>
+                  </div>
+                  <div className="modal-info-row">
+                    <span className="modal-info-label">Type</span>
+                    <span className="modal-info-value">{consultModalAppt.visit_type === 'follow_up' ? 'Follow-up' : 'New Consultation'}</span>
                   </div>
                   <div className="modal-info-row">
                     <span className="modal-info-label">Priority</span>

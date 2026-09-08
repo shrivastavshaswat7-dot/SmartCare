@@ -4,6 +4,18 @@ import { supabase } from '../lib/supabase'
 import DashboardLayout from '../components/DashboardLayout'
 import './AdminQueueControl.css'
 
+const formatTimeRange = (start, end, fallback) => {
+  if (!start || !end) return fallback ? fallback.slice(0, 5) : '—';
+  const format12 = (time24) => {
+    const [h, m] = time24.split(':')
+    let hrs = parseInt(h, 10)
+    const ampm = hrs >= 12 ? 'PM' : 'AM'
+    hrs = hrs % 12 || 12
+    return `${hrs}:${m} ${ampm}`
+  }
+  return `${format12(start)} – ${format12(end)}`
+}
+
 function AdminQueueControl() {
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -496,7 +508,8 @@ function AdminQueueControl() {
 
                       <div className="qc-patient-meta">
                         <span><strong>Phone:</strong> {patient?.phone || patient?.email || 'N/A'}</span>
-                        <span><strong>Scheduled:</strong> {currentConsulting.appointment_time?.slice(0, 5) || '—'}</span>
+                        <span><strong>Scheduled:</strong> {formatTimeRange(currentConsulting.slot_start, currentConsulting.slot_end, currentConsulting.appointment_time)}</span>
+                        <span><strong>Type:</strong> {currentConsulting.visit_type === 'follow_up' ? 'Follow-up' : 'New Consultation'}</span>
                         <span><strong>Doctor:</strong> {activeDoctorObj?.name}</span>
                       </div>
                     </div>
@@ -574,6 +587,7 @@ function AdminQueueControl() {
                   <th>Patient Name</th>
                   <th>Contact</th>
                   <th>Scheduled</th>
+                  <th>Type</th>
                   <th>Priority</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -623,7 +637,12 @@ function AdminQueueControl() {
                           </span>
                         </td>
                         <td>
-                          {appt.appointment_time ? appt.appointment_time.slice(0, 5) : '—'}
+                          {formatTimeRange(appt.slot_start, appt.slot_end, appt.appointment_time)}
+                        </td>
+                        <td>
+                          <span className={`type-badge ${appt.visit_type === 'follow_up' ? 'follow-up' : 'new'}`}>
+                            {appt.visit_type === 'follow_up' ? 'Follow-up' : 'New'}
+                          </span>
                         </td>
                         <td>
                           {isEmergency ? (
@@ -692,6 +711,7 @@ function AdminQueueControl() {
                     <th>Token</th>
                     <th>Patient Name</th>
                     <th>Time</th>
+                    <th>Type</th>
                     <th>Priority</th>
                     <th>Final Status</th>
                   </tr>
@@ -719,7 +739,12 @@ function AdminQueueControl() {
                             {patient?.name || `Patient #${appt.patient_id?.slice(0, 6)}`}
                           </td>
                           <td>
-                            {appt.appointment_time ? appt.appointment_time.slice(0, 5) : '—'}
+                            {formatTimeRange(appt.slot_start, appt.slot_end, appt.appointment_time)}
+                          </td>
+                          <td>
+                            <span className={`type-badge ${appt.visit_type === 'follow_up' ? 'follow-up' : 'new'}`}>
+                              {appt.visit_type === 'follow_up' ? 'Follow-up' : 'New'}
+                            </span>
                           </td>
                           <td>
                             {isEmergency ? (

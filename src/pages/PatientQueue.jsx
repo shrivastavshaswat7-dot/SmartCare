@@ -4,6 +4,18 @@ import { supabase } from '../lib/supabase'
 import DashboardLayout from '../components/DashboardLayout'
 import './PatientQueue.css'
 
+const formatTimeRange = (start, end, fallback) => {
+  if (!start || !end) return fallback ? fallback.slice(0, 5) : '—';
+  const format12 = (time24) => {
+    const [h, m] = time24.split(':')
+    let hrs = parseInt(h, 10)
+    const ampm = hrs >= 12 ? 'PM' : 'AM'
+    hrs = hrs % 12 || 12
+    return `${hrs}:${m} ${ampm}`
+  }
+  return `${format12(start)} – ${format12(end)}`
+}
+
 // Average consultation duration estimate (minutes)
 const AVG_CONSULT_MINUTES = 10
 
@@ -282,7 +294,14 @@ function PatientQueue() {
                       <span className="queue-detail-icon">📅</span>
                       <div className="queue-detail-text">
                         <span className="queue-detail-primary">{item.appointment_date}</span>
-                        <span className="queue-detail-secondary">{item.appointment_time}</span>
+                        <span className="queue-detail-secondary">{formatTimeRange(item.slot_start, item.slot_end, item.appointment_time)}</span>
+                      </div>
+                    </div>
+                    <div className="queue-detail-row">
+                      <span className="queue-detail-icon">🏷️</span>
+                      <div className="queue-detail-text">
+                        <span className="queue-detail-primary">Consultation Type</span>
+                        <span className="queue-detail-secondary">{item.visit_type === 'follow_up' ? 'Follow-up' : 'New'}</span>
                       </div>
                     </div>
                   </div>

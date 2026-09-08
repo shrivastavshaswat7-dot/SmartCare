@@ -5,6 +5,18 @@ import { supabase } from '../lib/supabase'
 import DashboardLayout from '../components/DashboardLayout'
 import './DoctorDashboard.css'
 
+const formatTimeRange = (start, end, fallback) => {
+  if (!start || !end) return fallback ? fallback.slice(0, 5) : '—';
+  const format12 = (time24) => {
+    const [h, m] = time24.split(':')
+    let hrs = parseInt(h, 10)
+    const ampm = hrs >= 12 ? 'PM' : 'AM'
+    hrs = hrs % 12 || 12
+    return `${hrs}:${m} ${ampm}`
+  }
+  return `${format12(start)} – ${format12(end)}`
+}
+
 function DoctorDashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -250,7 +262,10 @@ function DoctorDashboard() {
                       <h4>{profilesMap[consultingAppt.patient_id]?.name || 'Patient'}</h4>
                       <div className="consulting-meta">
                         <span className="token-tag">Token #{consultingAppt.token_number}</span>
-                        <span>🕐 {consultingAppt.appointment_time}</span>
+                        <span>🕐 {formatTimeRange(consultingAppt.slot_start, consultingAppt.slot_end, consultingAppt.appointment_time)}</span>
+                        <span className={`type-badge ${consultingAppt.visit_type === 'follow_up' ? 'follow-up' : 'new'}`}>
+                          {consultingAppt.visit_type === 'follow_up' ? 'Follow-up' : 'New'}
+                        </span>
                         {(consultingAppt.priority || '').toLowerCase() === 'emergency' && (
                           <span className="emergency-tag">🚨 Emergency</span>
                         )}
@@ -314,7 +329,8 @@ function DoctorDashboard() {
                           <span className="queue-token">#{appt.token_number}</span>
                           <div>
                             <div className="queue-patient-name">{patientName}</div>
-                            <div className="queue-patient-time">🕐 {appt.appointment_time}</div>
+                            <div className="queue-patient-time">🕐 {formatTimeRange(appt.slot_start, appt.slot_end, appt.appointment_time)}</div>
+                            <div style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>{appt.visit_type === 'follow_up' ? 'Follow-up' : 'New Consultation'}</div>
                           </div>
                         </div>
                         <div className="queue-patient-right">

@@ -4,6 +4,18 @@ import { supabase } from '../lib/supabase'
 import DashboardLayout from '../components/DashboardLayout'
 import './DoctorHistory.css'
 
+const formatTimeRange = (start, end, fallback) => {
+  if (!start || !end) return fallback ? fallback.slice(0, 5) : '—';
+  const format12 = (time24) => {
+    const [h, m] = time24.split(':')
+    let hrs = parseInt(h, 10)
+    const ampm = hrs >= 12 ? 'PM' : 'AM'
+    hrs = hrs % 12 || 12
+    return `${hrs}:${m} ${ampm}`
+  }
+  return `${format12(start)} – ${format12(end)}`
+}
+
 function DoctorHistory() {
   const { user } = useAuth()
 
@@ -55,6 +67,9 @@ function DoctorHistory() {
             token_number,
             appointment_date,
             appointment_time,
+            slot_start,
+            slot_end,
+            visit_type,
             patient_id,
             priority,
             status
@@ -182,7 +197,8 @@ function DoctorHistory() {
                     <tr>
                       <th>Token</th>
                       <th>Patient</th>
-                      <th>Date</th>
+                      <th>Date & Time</th>
+                      <th>Type</th>
                       <th>Notes</th>
                       <th>Prescription</th>
                       <th>Completed</th>
@@ -215,7 +231,17 @@ function DoctorHistory() {
                                 )}
                               </div>
                             </td>
-                            <td>{appt?.appointment_date || '—'}</td>
+                            <td>
+                              <div>{appt?.appointment_date || '—'}</div>
+                              <div style={{fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px'}}>
+                                {formatTimeRange(appt?.slot_start, appt?.slot_end, appt?.appointment_time)}
+                              </div>
+                            </td>
+                            <td>
+                              <span className={`type-badge ${appt?.visit_type === 'follow_up' ? 'follow-up' : 'new'}`}>
+                                {appt?.visit_type === 'follow_up' ? 'Follow-up' : 'New'}
+                              </span>
+                            </td>
                             <td>
                               <div className="history-notes-cell">
                                 {c.notes || <em style={{ color: 'var(--text-light)' }}>No notes</em>}
