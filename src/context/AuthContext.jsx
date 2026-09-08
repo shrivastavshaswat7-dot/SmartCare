@@ -5,19 +5,40 @@ const AuthContext = createContext()
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
+  const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  // Fetch role from profiles table for a given user id
+  const fetchRole = async (userId) => {
+    if (!userId) { setRole(null); return }
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single()
+      setRole(data?.role || 'patient')
+    } catch {
+      setRole('patient')
+    }
+  }
 
   useEffect(() => {
     // Check for existing session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+      if (currentUser) await fetchRole(currentUser.id)
       setLoading(false)
     })
 
     // Listen for auth state changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null)
+      async (_event, session) => {
+        const currentUser = session?.user ?? null
+        setUser(currentUser)
+        if (currentUser) await fetchRole(currentUser.id)
+        else setRole(null)
       }
     )
 
@@ -54,6 +75,9 @@ export function AuthProvider({ children }) {
       }
     }
 
+    // Set role for newly registered patient
+    if (data.user) setRole('patient')
+
     return { data, error }
   }
 
@@ -74,7 +98,7 @@ export function AuthProvider({ children }) {
     const authUser = data.user
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, role')
       .eq('id', authUser.id)
       .single()
 
@@ -90,6 +114,9 @@ export function AuthProvider({ children }) {
       if (profileErr) {
         console.warn('Profile insert after login:', profileErr.message)
       }
+      setRole('patient')
+    } else {
+      setRole(existingProfile.role || 'patient')
     }
 
     return { data, error }
@@ -97,10 +124,11 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
+    setRole(null)
     return { error }
   }
 
-  const value = { user, loading, signUp, signIn, signOut }
+  const value = { user, role, loading, signUp, signIn, signOut }
 
   return (
     <AuthContext.Provider value={value}>

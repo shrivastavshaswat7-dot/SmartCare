@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import './DashboardLayout.css'
 
-function DashboardLayout({ children, title, subtitle }) {
+function DashboardLayout({ children, title, subtitle, navItems: customNavItems, roleLabel, showBookCta }) {
   const { user, signOut } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
@@ -20,12 +20,16 @@ function DashboardLayout({ children, title, subtitle }) {
     year: 'numeric'
   })
 
-  const navItems = [
+  const defaultNavItems = [
     { label: 'Dashboard', path: '/', icon: '📊' },
     { label: 'Book Appointment', path: '/book-appointment', icon: '➕' },
     { label: 'Live Queue Status', path: '/queue', icon: '⏳', disabled: false },
     { label: 'Medical History', path: '/#history', icon: '📁', disabled: false }
   ]
+
+  const navItems = customNavItems || defaultNavItems
+  const displayRole = roleLabel || 'Patient Portal'
+  const displayBookCta = showBookCta !== undefined ? showBookCta : true
 
   const handleSignOut = async () => {
     await signOut()
@@ -67,7 +71,7 @@ function DashboardLayout({ children, title, subtitle }) {
           <div className="patient-info">
             <span className="patient-name">{patientName}</span>
             <span className="patient-email">{patientEmail}</span>
-            <span className="patient-role">Patient Portal</span>
+            <span className="patient-role">{displayRole}</span>
           </div>
         </div>
 
@@ -123,7 +127,7 @@ function DashboardLayout({ children, title, subtitle }) {
               <span>{todayStr}</span>
             </div>
 
-            {location.pathname !== '/book-appointment' && (
+            {displayBookCta && location.pathname !== '/book-appointment' && (
               <button
                 onClick={() => navigate('/book-appointment')}
                 className="header-cta-btn"

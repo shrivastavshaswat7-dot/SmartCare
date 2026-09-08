@@ -1,0 +1,558 @@
+/* Admin Queue Control Styles */
+
+.queue-control-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Selector Bar */
+.qc-selector-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.qc-selectors-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.qc-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qc-field-group label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.qc-select,
+.qc-date-input {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-main);
+  background: var(--bg-main);
+  outline: none;
+  cursor: pointer;
+  min-width: 220px;
+  transition: border-color 0.2s ease;
+}
+
+.qc-select:focus,
+.qc-date-input:focus {
+  border-color: var(--primary);
+}
+
+.qc-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.qc-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-main);
+  transition: all 0.2s ease;
+}
+
+.qc-refresh-btn:hover {
+  background: var(--bg-main);
+  border-color: var(--text-muted);
+}
+
+.qc-sync-badge {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* Feedback Alerts */
+.qc-alert {
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.qc-alert-success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.qc-alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.qc-alert-close {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.qc-alert-close:hover {
+  opacity: 1;
+}
+
+/* Stats Row */
+.qc-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.qc-mini-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.qc-mini-stat-icon {
+  font-size: 1.4rem;
+}
+
+.qc-mini-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.qc-mini-stat-val {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.qc-mini-stat-lbl {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Currently Consulting Section */
+.qc-consulting-card {
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+}
+
+.qc-consulting-active {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 2px solid #86efac;
+}
+
+.qc-consulting-idle {
+  background: var(--bg-card);
+  border: 2px dashed var(--border);
+  text-align: center;
+  padding: 32px 24px;
+}
+
+.qc-active-consultation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.qc-patient-summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.qc-token-huge {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-lg);
+  background: #15803d;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(21, 128, 61, 0.3);
+  flex-shrink: 0;
+}
+
+.qc-token-huge-lbl {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
+.qc-token-huge-num {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.qc-patient-details h3 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #14532d;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.qc-live-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #22c55e;
+  color: #ffffff;
+  padding: 3px 10px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  animation: pulse-border-green 2s infinite ease-in-out;
+}
+
+@keyframes pulse-border-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  50% { box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.15); }
+}
+
+.qc-patient-meta {
+  font-size: 0.88rem;
+  color: #166534;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.qc-consultation-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.qc-btn-complete {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  padding: 12px 22px;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
+}
+
+.qc-btn-complete:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(22, 163, 74, 0.3);
+}
+
+.qc-btn-call-next {
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  padding: 12px 22px;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
+}
+
+.qc-btn-call-next:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(2, 132, 199, 0.3);
+}
+
+.qc-btn-call-next:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Idle State in Cabin */
+.qc-idle-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.qc-idle-icon {
+  font-size: 2.5rem;
+}
+
+.qc-idle-content h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.qc-idle-content p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  max-width: 450px;
+}
+
+/* Queue List Section */
+.qc-queue-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.qc-section-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: #fafbfc;
+}
+
+.qc-section-title-group h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qc-section-title-group p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.qc-priority-note {
+  font-size: 0.8rem;
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fee2e2;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.qc-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.qc-table th {
+  background: var(--bg-main);
+  padding: 12px 20px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.qc-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.qc-table tbody tr.row-emergency {
+  background: #fffafa;
+}
+
+.qc-table tbody tr.row-emergency:hover {
+  background: #fff1f2;
+}
+
+.qc-pos-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-main);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.qc-pos-badge.pos-next {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 2px 5px rgba(2, 132, 199, 0.3);
+}
+
+.qc-action-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qc-btn-call-row {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qc-btn-call-row:hover {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.qc-btn-cancel-row {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid #fecaca;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qc-btn-cancel-row:hover {
+  background: #fee2e2;
+}
+
+/* Past Consultations Collapsible */
+.qc-past-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.qc-past-header {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  background: #fafbfc;
+  user-select: none;
+}
+
+.qc-past-header h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.qc-toggle-arrow {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+  .qc-selector-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .qc-select,
+  .qc-date-input {
+    min-width: 100%;
+  }
+  .qc-active-consultation {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .qc-consultation-actions {
+    width: 100%;
+  }
+  .qc-btn-complete,
+  .qc-btn-call-next {
+    flex: 1;
+    justify-content: center;
+  }
+}

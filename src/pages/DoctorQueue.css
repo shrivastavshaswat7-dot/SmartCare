@@ -1,0 +1,419 @@
+/* Doctor Queue Styles */
+
+.doctor-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Controls Bar */
+.queue-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.queue-controls-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.queue-controls-left h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.last-refreshed-text {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.queue-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Currently Consulting Banner */
+.consulting-banner {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: var(--shadow-md);
+  flex-wrap: wrap;
+}
+
+.consulting-banner-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.consulting-banner-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.consulting-banner-details h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.consulting-banner-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.82rem;
+  opacity: 0.9;
+  flex-wrap: wrap;
+}
+
+.consulting-banner-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.consulting-banner-actions .doc-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+.consulting-banner-actions .doc-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.consulting-banner-actions .doc-btn-complete {
+  background: #ffffff;
+  color: #15803d;
+  border: none;
+  font-weight: 700;
+}
+
+.consulting-banner-actions .doc-btn-complete:hover:not(:disabled) {
+  background: #f0fdf4;
+}
+
+/* Waiting Queue Table */
+.queue-table-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.queue-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: #fafbfc;
+}
+
+.queue-table-header h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.queue-table-scroll {
+  overflow-x: auto;
+}
+
+.queue-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.queue-table th {
+  background: var(--bg-main);
+  padding: 12px 18px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.queue-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.queue-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.queue-table tbody tr.emergency-table-row {
+  background: #fffbfb;
+}
+
+.queue-table tbody tr.emergency-table-row:hover {
+  background: #fff5f5;
+}
+
+/* Past Section */
+.past-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.past-toggle-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.past-toggle-btn:hover {
+  border-color: var(--text-muted);
+  color: var(--text-main);
+}
+
+/* Consultation Modal */
+.consultation-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.consultation-modal {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  background: #fafbfc;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.modal-header h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background: var(--bg-main);
+  color: var(--text-main);
+}
+
+.modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Patient Info in Modal */
+.modal-patient-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.modal-info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+}
+
+.modal-info-label {
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 100px;
+}
+
+.modal-info-value {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* Form Fields in Modal */
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.modal-field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  transition: border-color 0.2s ease;
+  background: var(--bg-card);
+  color: var(--text-main);
+}
+
+.modal-field textarea:focus {
+  border-color: var(--border-focus);
+}
+
+.modal-field textarea::placeholder {
+  color: var(--text-light);
+}
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: #fafbfc;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.modal-footer .doc-btn {
+  min-width: 120px;
+  justify-content: center;
+}
+
+/* Empty row for table */
+.queue-empty-row td {
+  text-align: center;
+  padding: 40px !important;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .queue-controls-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .consulting-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .consulting-banner-actions {
+    width: 100%;
+  }
+
+  .consulting-banner-actions .doc-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .consultation-modal {
+    max-width: 100%;
+    margin: 10px;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer .doc-btn {
+    width: 100%;
+  }
+}

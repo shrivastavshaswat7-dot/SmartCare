@@ -110,25 +110,12 @@ function BookAppointment() {
     setError('')
 
     try {
-      // 1. Calculate highest token number for selected doctor and date
-      const { data: existingAppts, error: tokenErr } = await supabase
-        .from('appointments')
-        .select('token_number')
-        .eq('doctor_id', selectedDoctor)
-        .eq('appointment_date', appointmentDate)
-        .order('token_number', { ascending: false })
-        .limit(1)
-
-      if (tokenErr) console.warn('Token calculation warning:', tokenErr.message)
-
-      const highestToken = existingAppts && existingAppts.length > 0 ? (existingAppts[0].token_number || 0) : 0
-      const nextToken = highestToken + 1
-
-      // 2. Insert appointment using PostgreSQL-compliant constraint values
-      // priority: 'normal' | 'emergency' (lowercase)
-      // status: 'waiting'
+      // priority: 'normal' | 'emergency' (lowercase for DB constraint)
       const dbPriority = priority.toLowerCase()
 
+      // Insert appointment — token_number is auto-assigned by the
+      // database trigger (assign_token_number), so we don't send one.
+      // The .select() returns the row AFTER the trigger has set token_number.
       const { data: newAppt, error: insertErr } = await supabase
         .from('appointments')
         .insert({
@@ -137,18 +124,18 @@ function BookAppointment() {
           appointment_date: appointmentDate,
           appointment_time: appointmentTime,
           priority: dbPriority,
-          status: 'waiting',
-          token_number: nextToken
+          status: 'waiting'
         })
         .select()
 
       if (insertErr) throw insertErr
 
+      const assignedToken = newAppt?.[0]?.token_number
       const doctorObj = doctors.find(d => String(d.id) === String(selectedDoctor))
       const deptObj = departments.find(d => String(d.id) === String(selectedDepartment))
 
       setBookingSuccess({
-        tokenNumber: nextToken,
+        tokenNumber: assignedToken,
         doctorName: doctorObj ? doctorObj.name : 'Selected Doctor',
         departmentName: deptObj ? deptObj.name : 'Selected Department',
         date: appointmentDate,

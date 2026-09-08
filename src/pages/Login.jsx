@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 import './Auth.css'
 
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loginRole, setLoginRole] = useState('patient') // 'patient' or 'doctor'
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { signIn } = useAuth()
@@ -16,15 +18,43 @@ function Login() {
     setError('')
     setLoading(true)
 
-    const { error } = await signIn({ email, password })
+    const { data, error: signInError } = await signIn({ email, password })
 
-    if (error) {
-      setError(error.message)
+    if (signInError) {
+      setError(signInError.message)
       setLoading(false)
       return
     }
 
-    navigate('/')
+    // Fetch role to determine where to redirect
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profile?.role === 'admin') {
+        navigate('/admin')
+        return
+      }
+
+      if (loginRole === 'doctor') {
+        if (profile?.role === 'doctor') {
+          navigate('/doctor')
+        } else {
+          // If they try to log in as doctor but aren't one, block access and sign out
+          await supabase.auth.signOut()
+          setError('This account is not registered as a doctor.')
+          setLoading(false)
+        }
+      } else {
+        // Patient login selected
+        navigate('/')
+      }
+    } catch {
+      navigate('/')
+    }
   }
 
   return (
@@ -32,6 +62,21 @@ function Login() {
       <div className="auth-card">
         <h1 className="auth-title">🏥 SmartCare</h1>
         <h2 className="auth-subtitle">Welcome back</h2>
+
+        <div className="role-selector">
+          <button 
+            className={`role-btn ${loginRole === 'patient' ? 'active' : ''}`}
+            onClick={() => { setLoginRole('patient'); setError(''); }}
+          >
+            🧑‍⚕️ Patient Login
+          </button>
+          <button 
+            className={`role-btn ${loginRole === 'doctor' ? 'active' : ''}`}
+            onClick={() => { setLoginRole('doctor'); setError(''); }}
+          >
+            🩺 Doctor Login
+          </button>
+        </div>
 
         {error && <div className="auth-error">{error}</div>}
 
@@ -61,7 +106,7 @@ function Login() {
           </div>
 
           <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Signing in...' : `Sign In as ${loginRole === 'doctor' ? 'Doctor' : 'Patient'}`}
           </button>
         </form>
 
