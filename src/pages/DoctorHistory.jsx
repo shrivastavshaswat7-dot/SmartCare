@@ -110,7 +110,10 @@ function DoctorHistory() {
   }, [user.id])
 
   useEffect(() => {
-    fetchHistory()
+    const runFetch = async () => {
+      await fetchHistory()
+    }
+    runFetch()
   }, [fetchHistory])
 
   // Filter consultations by search and date
@@ -207,7 +210,7 @@ function DoctorHistory() {
                   <tbody>
                     {filteredConsultations.length === 0 ? (
                       <tr className="history-empty-row">
-                        <td colSpan="6">
+                        <td colSpan="7">
                           <span className="history-empty-icon">📋</span>
                           {searchQuery || dateFilter
                             ? 'No consultations match your filters.'

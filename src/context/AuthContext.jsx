@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
@@ -102,6 +103,7 @@ export function AuthProvider({ children }) {
       .eq('id', authUser.id)
       .single()
 
+    let finalRole = 'patient'
     if (!existingProfile) {
       const meta = authUser.user_metadata
       const { error: profileErr } = await supabase.from('profiles').insert({
@@ -116,10 +118,11 @@ export function AuthProvider({ children }) {
       }
       setRole('patient')
     } else {
-      setRole(existingProfile.role || 'patient')
+      finalRole = existingProfile.role || 'patient'
+      setRole(finalRole)
     }
 
-    return { data, error }
+    return { data, error, role: finalRole }
   }
 
   const signOut = async () => {

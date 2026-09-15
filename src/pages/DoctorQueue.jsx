@@ -36,7 +36,7 @@ function DoctorQueue() {
   const [consultPrescription, setConsultPrescription] = useState('')
   const [savingConsult, setSavingConsult] = useState(false)
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = new Date().toLocaleDateString('en-CA')
 
   const doctorNavItems = [
     { label: 'Dashboard', path: '/doctor', icon: '📊' },
@@ -98,7 +98,10 @@ function DoctorQueue() {
   }, [user.id, todayStr])
 
   useEffect(() => {
-    fetchQueueData()
+    const runFetch = async () => {
+      await fetchQueueData()
+    }
+    runFetch()
   }, [fetchQueueData])
 
   // Auto-refresh every 15 seconds
@@ -361,18 +364,11 @@ function DoctorQueue() {
                 </div>
                 <div className="consulting-banner-actions">
                   <button
-                    className="doc-btn"
+                    className="doc-btn doc-btn-primary"
                     onClick={() => handleOpenConsultation(currentConsulting)}
                     disabled={actionLoading}
                   >
-                    📝 Write Notes
-                  </button>
-                  <button
-                    className="doc-btn doc-btn-complete"
-                    onClick={() => handleOpenConsultation(currentConsulting)}
-                    disabled={actionLoading}
-                  >
-                    ✅ Complete Consultation
+                    📝 Write Notes / Complete
                   </button>
                 </div>
               </div>
@@ -403,7 +399,7 @@ function DoctorQueue() {
                   <tbody>
                     {waitingAppointments.length === 0 ? (
                       <tr className="queue-empty-row">
-                        <td colSpan="5">
+                        <td colSpan="6">
                           🎉 No patients waiting — all caught up!
                         </td>
                       </tr>

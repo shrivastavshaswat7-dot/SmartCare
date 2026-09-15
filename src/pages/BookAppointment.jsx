@@ -75,23 +75,9 @@ function BookAppointment() {
   const [bookingSuccess, setBookingSuccess] = useState(null)
 
   // Today's date YYYY-MM-DD for min date
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = new Date().toLocaleDateString('en-CA')
 
-  useEffect(() => {
-    fetchData()
-  }, [])
 
-  useEffect(() => {
-    if (visitType === 'follow_up' && selectedDepartment) {
-      findPreviousDoctor()
-    } else {
-      setPreviousAppointment(null)
-      setSelectedDoctor('')
-      setAvailableSlots([])
-      setSelectedSlot(null)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visitType, selectedDepartment])
 
   const fetchData = async () => {
     setLoading(true)
@@ -159,6 +145,27 @@ function BookAppointment() {
     }
   }
 
+  useEffect(() => {
+    const runFetch = async () => { await fetchData() }
+    runFetch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    const handleChanges = async () => {
+      if (visitType === 'follow_up' && selectedDepartment) {
+        await findPreviousDoctor()
+      } else {
+        setPreviousAppointment(null)
+        setSelectedDoctor('')
+        setAvailableSlots([])
+        setSelectedSlot(null)
+      }
+    }
+    handleChanges()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visitType, selectedDepartment])
+
   const loadAvailableSlots = async (docId, dateStr) => {
     if (!docId || !dateStr) return []
     const dateObj = new Date(dateStr)
@@ -183,7 +190,6 @@ function BookAppointment() {
     
     while (current + dur <= end) {
       const slotStartStr = formatTimeStr(current).slice(0, 5)
-      const slotEndStr = formatTimeStr(current + dur).slice(0, 5)
       if (!bookedTimes.includes(slotStartStr)) {
         slots.push({ start: formatTimeStr(current), end: formatTimeStr(current + dur) })
       }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { supabase } from '../lib/supabase'
+
 import './Auth.css'
 
 function Login() {
@@ -10,7 +10,7 @@ function Login() {
   const [loginRole, setLoginRole] = useState('patient') // 'patient', 'doctor', or 'admin'
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signIn } = useAuth()
+  const { signIn, signOut } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -18,7 +18,7 @@ function Login() {
     setError('')
     setLoading(true)
 
-    const { data, error: signInError } = await signIn({ email, password })
+    const { error: signInError, role: actualRole } = await signIn({ email, password })
 
     if (signInError) {
       setError(signInError.message)
@@ -26,40 +26,22 @@ function Login() {
       return
     }
 
-    // Fetch role to determine where to redirect
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', data.user.id)
-        .single()
+    const formatRole = (r) => r ? r.charAt(0).toUpperCase() + r.slice(1) : 'Unknown'
 
-      if (loginRole === 'admin') {
-        if (profile?.role === 'admin') {
-          navigate('/admin')
-        } else {
-          await supabase.auth.signOut()
-          setError('This account is not registered as an admin.')
-          setLoading(false)
-        }
-      } else if (loginRole === 'doctor') {
-        if (profile?.role === 'doctor') {
-          navigate('/doctor')
-        } else {
-          // If they try to log in as doctor but aren't one, block access and sign out
-          await supabase.auth.signOut()
-          setError('This account is not registered as a doctor.')
-          setLoading(false)
-        }
-      } else {
-        // Patient login selected
-        if (profile?.role === 'admin') {
-          navigate('/admin') // Safest fallback in case an admin logs in as patient
-        } else {
-          navigate('/')
-        }
-      }
-    } catch {
+    // Strict role matching
+    if (loginRole !== actualRole) {
+      await signOut()
+      setError(`This account is registered as a ${formatRole(actualRole)}. Please use ${formatRole(actualRole)} Login.`)
+      setLoading(false)
+      return
+    }
+
+    // Navigate to appropriate dashboard based on exact role match
+    if (actualRole === 'admin') {
+      navigate('/admin')
+    } else if (actualRole === 'doctor') {
+      navigate('/doctor')
+    } else {
       navigate('/')
     }
   }

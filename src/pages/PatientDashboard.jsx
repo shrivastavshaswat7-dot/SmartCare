@@ -16,11 +16,7 @@ function PatientDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    if (user?.id) {
-      fetchPatientData()
-    }
-  }, [user])
+
 
   const fetchPatientData = async () => {
     setLoading(true)
@@ -59,10 +55,18 @@ function PatientDashboard() {
     }
   }
 
+  useEffect(() => {
+    const runFetch = async () => {
+      if (user?.id) await fetchPatientData()
+    }
+    runFetch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
   // Calculate stats
   const totalAppointments = appointments.length
   const upcomingCount = appointments.filter(a => a.status !== 'completed' && a.status !== 'cancelled').length
-  const emergencyCount = appointments.filter(a => a.priority === 'Emergency').length
+  const emergencyCount = appointments.filter(a => (a.priority || '').toLowerCase() === 'emergency').length
   const activeToken = appointments.find(a => a.status === 'pending' || a.status === 'waiting')
 
   return (
@@ -133,13 +137,6 @@ function PatientDashboard() {
               <h4>Live Queue Tracker</h4>
               <p>Check real-time queue position & wait time</p>
               <span className="action-link">View Queue →</span>
-            </div>
-
-            <div className="action-card">
-              <div className="action-icon">📁</div>
-              <h4>Consultation Records</h4>
-              <p>Access prescriptions and past history</p>
-              <span className="action-badge">History</span>
             </div>
           </div>
         </section>

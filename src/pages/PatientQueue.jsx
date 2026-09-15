@@ -100,11 +100,7 @@ function PatientQueue() {
 
         // Determine currently serving token
         const consultingAppt = sorted.find(a => a.status === 'consulting')
-        const currentlyServing = consultingAppt
-          ? consultingAppt.token_number
-          : sorted.length > 0
-            ? sorted[0].token_number
-            : null
+        const currentlyServing = consultingAppt ? consultingAppt.token_number : null
 
         // Find this patient's position in the sorted queue
         const position = sorted.findIndex(a => a.id === appt.id) + 1
@@ -139,7 +135,10 @@ function PatientQueue() {
   }, [user])
 
   useEffect(() => {
-    if (user?.id) fetchQueueData()
+    const runFetch = async () => {
+      if (user?.id) await fetchQueueData()
+    }
+    runFetch()
   }, [user, fetchQueueData])
 
   // Auto-refresh every 30 seconds

@@ -21,7 +21,7 @@ function AdminDashboard() {
 
   // Default to today's date in YYYY-MM-DD
   const [selectedDate, setSelectedDate] = useState(() => {
-    return new Date().toISOString().split('T')[0]
+    return new Date().toLocaleDateString('en-CA')
   })
 
   const [appointments, setAppointments] = useState([])
@@ -390,7 +390,7 @@ function AdminDashboard() {
                 <tbody>
                   {filteredAppointments.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="empty-state-row">
+                      <td colSpan="8" className="empty-state-row">
                         {loading
                           ? 'Loading appointments...'
                           : 'No appointments match the selected filters.'}

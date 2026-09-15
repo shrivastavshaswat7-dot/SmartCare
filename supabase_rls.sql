@@ -115,9 +115,49 @@ CREATE POLICY "Admin can update appointment status"
 
 
 -- --------------------------------------------------------------------
--- 4. PROFILES TABLE RLS POLICIES
+-- 4. PROFILES TABLE RLS POLICIES & ROLE PROTECTION TRIGGER
 -- --------------------------------------------------------------------
 
+-- 4a. Trigger Function to prevent unauthorized role modifications
+CREATE OR REPLACE FUNCTION public.protect_profile_role()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  -- Handle INSERT: newly created profiles must have role = 'patient', unless created by an admin
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.role IS DISTINCT FROM 'patient' AND NOT public.is_admin() THEN
+      RAISE EXCEPTION 'Unauthorized: Newly created profiles must have role = ''patient''.';
+    END IF;
+    RETURN NEW;
+  END IF;
+
+  -- Handle UPDATE:
+  -- If role is not being modified, allow updating allowed fields (name, phone, etc.)
+  IF NEW.role IS NOT DISTINCT FROM OLD.role THEN
+    RETURN NEW;
+  END IF;
+
+  -- If role IS being modified, only permit if caller is already a verified admin
+  IF public.is_admin() THEN
+    RETURN NEW;
+  END IF;
+
+  -- Otherwise, reject the role modification
+  RAISE EXCEPTION 'Unauthorized: You are not permitted to modify profile roles.';
+END;
+$$;
+
+-- 4b. Attach trigger to profiles table
+DROP TRIGGER IF EXISTS trg_protect_profile_role ON public.profiles;
+CREATE TRIGGER trg_protect_profile_role
+  BEFORE INSERT OR UPDATE ON public.profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.protect_profile_role();
+
+-- 4c. RLS Policies on profiles table
 -- Policy 1: Users can read their own profile
 DROP POLICY IF EXISTS "Users can read own profile" ON profiles;
 CREATE POLICY "Users can read own profile"
@@ -128,9 +168,9 @@ CREATE POLICY "Users can read own profile"
 DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 CREATE POLICY "Users can insert own profile"
   ON profiles FOR INSERT
-  WITH CHECK (auth.uid() = id);
+  WITH CHECK (auth.uid() = id AND (role = 'patient' OR public.is_admin()));
 
--- Policy 3: Users can update their own profile
+-- Policy 3: Users can update their own profile (name, phone, etc.)
 DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE
@@ -144,6 +184,13 @@ DROP POLICY IF EXISTS "Admin can read all profiles" ON profiles;
 CREATE POLICY "Admin can read all profiles"
   ON profiles FOR SELECT
   USING (public.is_admin());
+
+-- Policy 5: Admin can update any profile (e.g. promoting users or managing records)
+DROP POLICY IF EXISTS "Admin can update all profiles" ON profiles;
+CREATE POLICY "Admin can update all profiles"
+  ON profiles FOR UPDATE
+  USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 
 -- --------------------------------------------------------------------
@@ -392,6 +439,16 @@ CREATE POLICY "Doctors can update own consultations"
   )
   WITH CHECK (
     doctor_id = public.get_doctor_id()
+  );
+
+-- Patients can view their own consultations
+DROP POLICY IF EXISTS "Patients can view own consultations" ON consultations;
+CREATE POLICY "Patients can view own consultations"
+  ON consultations FOR SELECT
+  USING (
+    appointment_id IN (
+      SELECT id FROM public.appointments WHERE patient_id = auth.uid()
+    )
   );
 
 -- Admin can read all consultations

@@ -29,7 +29,7 @@ function DoctorDashboard() {
   const [feedback, setFeedback] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
 
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = new Date().toLocaleDateString('en-CA')
 
   const doctorNavItems = [
     { label: 'Dashboard', path: '/doctor', icon: '📊' },
@@ -92,7 +92,10 @@ function DoctorDashboard() {
   }, [user.id, todayStr])
 
   useEffect(() => {
-    fetchDoctorData()
+    const runFetch = async () => {
+      await fetchDoctorData()
+    }
+    runFetch()
   }, [fetchDoctorData])
 
   // Auto-refresh every 20 seconds

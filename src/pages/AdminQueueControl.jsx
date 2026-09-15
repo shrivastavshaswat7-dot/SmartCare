@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import DashboardLayout from '../components/DashboardLayout'
@@ -20,7 +20,7 @@ function AdminQueueControl() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const initialDoctor = searchParams.get('doctor') || ''
-  const initialDate = searchParams.get('date') || new Date().toISOString().split('T')[0]
+  const initialDate = searchParams.get('date') || new Date().toLocaleDateString('en-CA')
 
   const [selectedDoctor, setSelectedDoctor] = useState(initialDoctor)
   const [selectedDate, setSelectedDate] = useState(initialDate)
@@ -127,9 +127,11 @@ function AdminQueueControl() {
   }, [selectedDoctor, selectedDate])
 
   useEffect(() => {
-    if (selectedDoctor) {
-      fetchQueueData()
+    const runFetch = async () => {
+      if (selectedDoctor) await fetchQueueData()
     }
+    runFetch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDoctor, selectedDate, fetchQueueData])
 
   // Auto-refresh every 15 seconds
@@ -719,7 +721,7 @@ function AdminQueueControl() {
                 <tbody>
                   {pastAppointments.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="empty-state-row">
+                      <td colSpan="6" className="empty-state-row">
                         No completed or cancelled appointments yet for this date.
                       </td>
                     </tr>

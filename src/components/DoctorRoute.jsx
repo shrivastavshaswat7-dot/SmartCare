@@ -12,6 +12,10 @@ function DoctorRoute({ children }) {
     return <Navigate to="/login" replace />
   }
 
+  if (role === 'admin') {
+    return <Navigate to="/admin" replace />
+  }
+
   if (role !== 'doctor') {
     return <Navigate to="/" replace />
   }
