@@ -1,44 +1,195 @@
-# SmartCare Hospital Management System
+# SmartCare — Hospital Appointment & Queue Management System
 
-SmartCare is a modern, responsive Hospital Management System built with React, Vite, and Supabase. It provides dedicated portals and secure routing for Patients, Doctors, and Hospital Administrators to streamline daily medical operations.
+SmartCare is a role-based hospital appointment and queue management system designed to simplify appointment booking, token generation, queue management, and consultation workflows.
 
-## Features
+The system provides separate workflows for **Patients, Doctors, and Administrators**, with authentication and database access secured using Supabase Authentication and Row Level Security (RLS).
 
-### 🧑‍⚕️ For Patients
-- **Authentication:** Secure Registration and Login.
-- **Dashboard:** Overview of active appointments.
-- **Booking System:** Book appointments with dynamic department-to-doctor filtering.
-- **Live Queue:** Monitor live queue position and estimated waiting time.
-- **Priority Access:** Built-in emergency priority handling.
+## 🚀 Live Demo
 
-### 🩺 For Doctors
-- **Dedicated Dashboard:** Secure doctor-only access.
-- **Queue Management:** Manage today's patients, call the next patient, and view queue statistics.
-- **Consultation Hub:** Add consultation notes and digital prescriptions directly during the appointment.
-- **Medical History:** View past patient history securely restricted via Row Level Security (RLS).
+[SmartCare — Live Demo](https://smart-care-ixtawacsw-shrivastavshaswat7-8842.vercel.app/login)
 
-### ⚙️ For Administrators
-- **Admin Dashboard:** High-level hospital overview and real-time statistics.
-- **Queue Control:** Global queue management, manual overrides, and cancellation control.
+> Demo application for educational/project purposes. Use dummy credentials and data.
 
-## Tech Stack
-- **Frontend:** React, Vite, JavaScript, CSS (Vanilla)
-- **Backend/Database:** Supabase (PostgreSQL, Auth, RLS)
-- **Deployment:** Vercel
+## ✨ Features
 
-## Security
-- Utilizes strict **Row Level Security (RLS)** in Supabase to ensure data isolation.
-- Patients can only access their own appointments.
-- Doctors can only access data pertaining to their specific consultations.
-- Secure token generation using database triggers and advisory locks for absolute concurrency safety.
+### 👤 Patient
 
-## Setup Instructions
+* Patient registration and login
+* Browse departments and doctors
+* Book appointments
+* Select appointment date and time
+* Normal and emergency priority handling
+* Automatic appointment token generation
+* View queue status and estimated waiting time
+* View appointment and consultation information
+* Secure patient-specific data access
 
-1. Clone the repository.
-2. Run `npm install` to install dependencies.
-3. Duplicate `.env.example` to `.env` and configure your Supabase URL and Anon Key.
-4. Run the provided `supabase_rls.sql` in your Supabase SQL editor to set up the database schema, triggers, and RLS policies.
-5. Run `npm run dev` to start the local development server.
+### 👨‍⚕️ Doctor
 
-## License
+* Dedicated doctor authentication
+* Doctor dashboard
+* View assigned appointments and queue
+* Call the next patient
+* Manage consultation workflow
+* Add consultation notes and prescription
+* Access doctor-specific appointment information
+
+### 🛠️ Administrator
+
+* Dedicated admin authentication
+* Monitor hospital appointments and queues
+* Manage queue operations
+* View operational statistics
+* Administrative access protected by role-based authorization
+
+## 🔐 Security
+
+* Supabase Authentication for user authentication
+* Role-based access control for Patient, Doctor, and Admin users
+* PostgreSQL Row Level Security (RLS)
+* Patient data restricted to the authenticated patient
+* Doctor access restricted to assigned appointments
+* Consultation records protected against cross-doctor access
+* Protected frontend routes for role-specific dashboards
+
+## 🧠 Queue & Token Management
+
+SmartCare generates doctor-specific appointment tokens and maintains queue ordering based on appointment priority and token number.
+
+Example:
+
+```text
+Emergency
+   ↓
+Priority-based queue
+   ↓
+Token ordering
+   ↓
+Doctor calls next patient
+   ↓
+Consultation
+   ↓
+Completed
+```
+
+The system also provides an estimated waiting time based on the current queue. This is an estimate and not a guaranteed waiting time.
+
+## 🏗️ System Architecture
+
+```text
+┌──────────────────────┐
+│    React Frontend    │
+│      Vite + JSX      │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────┐
+│   Supabase Services  │
+│ Auth + Database + RLS│
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────┐
+│  PostgreSQL Database │
+└──────────────────────┘
+
+GitHub ───────► Vercel
+                  │
+                  ▼
+             Production App
+```
+
+## 🛠️ Tech Stack
+
+| Technology       | Purpose                     |
+| ---------------- | --------------------------- |
+| React            | Frontend UI                 |
+| Vite             | Development & build tooling |
+| JavaScript / JSX | Application logic           |
+| CSS              | Styling & responsive UI     |
+| Supabase Auth    | Authentication              |
+| PostgreSQL       | Database                    |
+| Supabase RLS     | Data access control         |
+| Git & GitHub     | Version control             |
+| Vercel           | Deployment                  |
+
+## 📂 Project Structure
+
+```text
+src/
+├── components/
+├── context/
+├── lib/
+├── pages/
+├── App.jsx
+├── App.css
+├── index.css
+└── main.jsx
+
+public/
+```
+
+## ⚙️ Local Setup
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/shrivastavshaswat7-dot/SmartCare
+cd SmartCare
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure environment variables
+
+Duplicate `.env.example` as `.env` and add your Supabase project credentials.
+
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+Never commit your `.env` file or private credentials.
+
+### 4. Set up the database
+
+Run the provided `supabase_rls.sql` through the Supabase SQL Editor to configure the required database policies, triggers, and security rules.
+
+### 5. Start the development server
+
+```bash
+npm run dev
+```
+
+The application will be available at:
+
+```text
+http://localhost:5173
+```
+
+## 🎯 Project Scope
+
+SmartCare focuses on:
+
+* Hospital appointment scheduling
+* Doctor-wise token generation
+* Queue management
+* Priority-based queue handling
+* Doctor consultation records
+* Role-based hospital workflows
+
+The project does not attempt to replace a complete hospital ERP system and intentionally excludes areas such as billing, pharmacy management, ambulance management, and online payments.
+
+## 📌 Project Status
+
+**Production deployed and functional.**
+
+Built as a college project to explore full-stack application development, authentication, PostgreSQL database design, Row Level Security, queue management, and production deployment.
+
+## 📄 License
+
 MIT License
