@@ -27,3 +27,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+scratch_*.mjs
+provision_doctors.mjs
