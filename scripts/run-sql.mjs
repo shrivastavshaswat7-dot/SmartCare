@@ -14,8 +14,12 @@
  * when it contains no FAIL.
  */
 import { readFileSync } from 'node:fs'
-import { resolve, basename } from 'node:path'
+import { resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import pg from 'pg'
+
+// Files are always read from the repository root, never from a caller-supplied path
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 const ALLOWED = new Set([
   'supabase_queue_status.sql',
@@ -24,28 +28,35 @@ const ALLOWED = new Set([
   'supabase_verify_behaviour.sql',
 ])
 
-const args = process.argv.slice(2)
-const file = args.find(a => !a.startsWith('--'))
-const apply = args.includes('--apply')
-
-if (!file || !ALLOWED.has(basename(file))) {
+const usage = (reason) => {
+  console.error(reason)
   console.error('Usage: npm run db -- <file.sql> [--apply]')
-  console.error('Allowed files: ' + [...ALLOWED].join(', '))
+  console.error('Allowed files (repository root only): ' + [...ALLOWED].join(', '))
   process.exit(2)
 }
+
+const args = process.argv.slice(2)
+const files = args.filter(a => !a.startsWith('--'))
+const flags = args.filter(a => a.startsWith('--'))
+if (files.length !== 1) usage('Give exactly one file name.')
+if (flags.some(f => f !== '--apply')) usage('Unknown option: ' + flags.find(f => f !== '--apply'))
+const file = files[0]
+// Exact bare file name: no directories, so ../elsewhere/<allowed name> is refused
+if (!ALLOWED.has(file)) usage('Not an allowed file name: ' + file)
+const apply = flags.includes('--apply')
 
 // Minimal .env.local reader (same approach as provision_doctors.mjs)
 function readEnv(path) {
   try {
     for (const line of readFileSync(path, 'utf8').split(/\r?\n/)) {
       const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/)
-      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '')
+      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].trim().replace(/^['"]|['"]$/g, '')
     }
   } catch {
     // file is optional
   }
 }
-readEnv(resolve(process.cwd(), '.env.local'))
+readEnv(resolve(ROOT, '.env.local'))
 
 const url = process.env.SUPABASE_DB_URL
 if (!url) {
@@ -54,7 +65,14 @@ if (!url) {
   process.exit(2)
 }
 
-const sql = readFileSync(resolve(process.cwd(), file), 'utf8')
+const sql = readFileSync(resolve(ROOT, file), 'utf8')
+
+// The runner owns the transaction; a file that commits or rolls back itself would
+// escape it. (PL/pgSQL "BEGIN"/"END;" inside DO blocks are block markers, not these.)
+if (/^\s*(?:(?:COMMIT|ROLLBACK|ABORT)\b|(?:END|START)\s+TRANSACTION\b|BEGIN\s*;|BEGIN\s+(?:TRANSACTION|WORK)\b)/im.test(sql)) {
+  console.error(`Refusing ${file}: it contains its own transaction control statement.`)
+  process.exit(2)
+}
 const ca = process.env.SUPABASE_DB_CA_FILE ? readFileSync(process.env.SUPABASE_DB_CA_FILE, 'utf8') : null
 const client = new pg.Client({
   connectionString: url,
@@ -63,6 +81,17 @@ const client = new pg.Client({
 })
 
 const host = (() => { try { return new URL(url).hostname } catch { return 'unknown host' } })()
+if (!ca) console.log('Note: TLS is encrypted but the server certificate is not verified (set SUPABASE_DB_CA_FILE to verify it).')
+
+// Belt and braces: never echo the connection string or its password, even inside an error
+const secrets = [url]
+try {
+  const pw = decodeURIComponent(new URL(url).password)
+  if (pw) secrets.push(pw)
+} catch {
+  // unparsable URL: the whole string is still redacted
+}
+const redact = (text) => secrets.reduce((t, s) => t.split(s).join('<redacted>'), String(text))
 const printRows = (res) => {
   for (const r of [].concat(res)) {
     if (r?.command === 'SELECT' && r.rows.length) console.table(r.rows)
@@ -72,14 +101,16 @@ const printRows = (res) => {
 let exitCode = 0
 try {
   await client.connect()
-  console.log(`Connected to ${host}. ${apply ? 'APPLY' : 'DRY RUN (will roll back)'}: ${basename(file)}`)
+  console.log(`Connected to ${host}. ${apply ? 'APPLY' : 'DRY RUN (will roll back)'}: ${file}`)
   await client.query('BEGIN')
   await client.query("SET LOCAL lock_timeout = '5s'")
   await client.query("SET LOCAL statement_timeout = '60s'")
   const res = await client.query(sql)
   printRows(res)
   if (apply) {
-    await client.query('COMMIT')
+    // PostgreSQL answers ROLLBACK to COMMIT if the transaction had failed
+    const done = await client.query('COMMIT')
+    if (done.command !== 'COMMIT') throw new Error('Transaction was not committed (' + done.command + ')')
     console.log('COMMITTED.')
   } else {
     await client.query('ROLLBACK')
@@ -87,13 +118,13 @@ try {
   }
 } catch (err) {
   await client.query('ROLLBACK').catch(() => {})
-  const msg = err?.message || String(err)
+  const msg = redact(err?.message || String(err))
   if (msg.startsWith('SMARTCARE TEST REPORT')) {
     console.log(msg)
     exitCode = /FAIL/.test(msg) ? 1 : 0
   } else {
     console.error(`ERROR (${err?.code || 'no code'}): ${msg}`)
-    console.error('Everything in this file was rolled back.')
+    console.error('Nothing was committed: the transaction was rolled back (or never started).')
     exitCode = 1
   }
 } finally {
