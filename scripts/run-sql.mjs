@@ -26,7 +26,12 @@ const ALLOWED = new Set([
   'supabase_emergency_requests.sql',
   'supabase_verify_readonly.sql',
   'supabase_verify_behaviour.sql',
+  'supabase_inspect_readonly.sql',
+  'supabase_emergency_requests_rollback.sql',
 ])
+
+// These only read: PostgreSQL itself rejects any write while they run
+const READ_ONLY = new Set(['supabase_verify_readonly.sql', 'supabase_inspect_readonly.sql'])
 
 const usage = (reason) => {
   console.error(reason)
@@ -102,7 +107,7 @@ let exitCode = 0
 try {
   await client.connect()
   console.log(`Connected to ${host}. ${apply ? 'APPLY' : 'DRY RUN (will roll back)'}: ${file}`)
-  await client.query('BEGIN')
+  await client.query(READ_ONLY.has(file) ? 'BEGIN READ ONLY' : 'BEGIN')
   await client.query("SET LOCAL lock_timeout = '5s'")
   await client.query("SET LOCAL statement_timeout = '60s'")
   const res = await client.query(sql)
