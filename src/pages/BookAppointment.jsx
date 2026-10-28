@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import DashboardLayout from '../components/DashboardLayout'
+import { bookingErrorMessage } from '../lib/bookingErrors'
+import { isEmergency } from '../lib/queue'
 import './BookAppointment.css'
 
 // Fallback seed data in case database tables are empty
@@ -293,20 +295,15 @@ function BookAppointment() {
         })
         .select()
 
-      if (insertErr) {
-        if (insertErr.code === '23505') {
-          if (insertErr.message?.includes('uq_patient_doctor_day_active')) {
-            throw new Error('You already have an appointment with this doctor on this date. Please choose another date or doctor.')
-          }
-          if (insertErr.message?.includes('idx_uq_appointments_slot')) {
-            throw new Error('This exact time slot has just been booked. Please choose another.')
-          }
-          throw new Error('This appointment conflicts with an existing booking. Please refresh and try again.')
-        }
-        throw insertErr
-      }
+      if (insertErr) throw new Error(bookingErrorMessage(insertErr))
 
-      const assignedToken = newAppt?.[0]?.token_number
+      // Show what the database actually stored: emergency requests are saved as
+      // normal priority until a doctor or admin approves them
+      const saved = newAppt?.[0] || {}
+      const assignedToken = saved.token_number
+      const savedPriority = isEmergency(saved) ? 'Emergency'
+        : saved.emergency_requested ? 'Emergency requested (pending staff review)'
+        : 'Normal'
       const doctorObj = doctors.find(d => String(d.id) === String(selectedDoctor))
       const deptObj = departments.find(d => String(d.id) === String(selectedDepartment))
 
@@ -317,7 +314,7 @@ function BookAppointment() {
         date: appointmentDate,
         timeRange: formatTimeRange(selectedSlot.start, selectedSlot.end),
         visitType: visitType === 'new' ? 'New Consultation' : 'Follow-up',
-        priority: priority
+        priority: savedPriority
       })
     } catch (err) {
       console.error('Error booking appointment:', err)
@@ -378,7 +375,7 @@ function BookAppointment() {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Priority</span>
-                  <span className={`priority-tag ${bookingSuccess.priority.toLowerCase()}`}>
+                  <span className={`priority-tag ${bookingSuccess.priority === 'Emergency' ? 'emergency' : 'normal'}`}>
                     {bookingSuccess.priority}
                   </span>
                 </div>
@@ -515,7 +512,7 @@ function BookAppointment() {
                       required
                     >
                       <option value="Normal">Normal</option>
-                      <option value="Emergency">Emergency / Urgent Visit</option>
+                      <option value="Emergency">Emergency / Urgent (reviewed by staff)</option>
                     </select>
                   </div>
 

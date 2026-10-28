@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import DashboardLayout from '../components/DashboardLayout'
+import { compareQueueOrder } from '../lib/queue'
 import './DoctorDashboard.css'
 
 const formatTimeRange = (start, end, fallback) => {
@@ -118,12 +119,7 @@ function DoctorDashboard() {
   // Waiting queue sorted: emergency first, then by token
   const waitingQueue = appointments
     .filter(a => a.status === 'waiting')
-    .sort((a, b) => {
-      const prioA = (a.priority || 'normal').toLowerCase() === 'emergency' ? 0 : 1
-      const prioB = (b.priority || 'normal').toLowerCase() === 'emergency' ? 0 : 1
-      if (prioA !== prioB) return prioA - prioB
-      return (a.token_number || 0) - (b.token_number || 0)
-    })
+    .sort(compareQueueOrder)
 
   // Start consultation for next patient
   const handleStartConsultation = async (appt) => {

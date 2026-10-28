@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import DashboardLayout from '../components/DashboardLayout'
+import { compareQueueOrder, hasPendingEmergencyRequest } from '../lib/queue'
 import './AdminQueueControl.css'
 
 const formatTimeRange = (start, end, fallback) => {
@@ -147,12 +148,7 @@ function AdminQueueControl() {
   // Waiting appointments sorted by emergency priority first, then token number ascending
   const waitingAppointments = appointments
     .filter(a => a.status === 'waiting')
-    .sort((a, b) => {
-      const prioA = (a.priority || 'normal').toLowerCase() === 'emergency' ? 0 : 1
-      const prioB = (b.priority || 'normal').toLowerCase() === 'emergency' ? 0 : 1
-      if (prioA !== prioB) return prioA - prioB
-      return (a.token_number || 0) - (b.token_number || 0)
-    })
+    .sort(compareQueueOrder)
 
   const pastAppointments = appointments.filter(
     a => a.status === 'completed' || a.status === 'cancelled'
@@ -307,6 +303,36 @@ function AdminQueueControl() {
   }
 
   // Cancel / Skip patient
+  // Approve or decline a patient's emergency-priority request
+  const handleEmergencyDecision = async (appt, approve) => {
+    setActionLoading(true)
+    setFeedback(null)
+
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .update(approve ? { priority: 'emergency', emergency_requested: false } : { emergency_requested: false })
+        .eq('id', appt.id)
+
+      if (error) throw error
+
+      setFeedback({
+        type: 'success',
+        message: `Token #${appt.token_number}: emergency request ${approve ? 'approved' : 'declined'}.`
+      })
+
+      await fetchQueueData(true)
+    } catch (err) {
+      console.error('Error updating emergency request:', err)
+      setFeedback({
+        type: 'error',
+        message: 'Could not update emergency request: ' + (err.message || 'Unknown error')
+      })
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   const handleCancelAppointment = async (apptId) => {
     const appt = appointments.find(a => a.id === apptId)
     const token = appt?.token_number || ''
@@ -661,6 +687,26 @@ function AdminQueueControl() {
                         </td>
                         <td>
                           <div className="qc-action-group">
+                            {hasPendingEmergencyRequest(appt) && (
+                              <>
+                                <button
+                                  className="qc-btn-call-row"
+                                  onClick={() => handleEmergencyDecision(appt, true)}
+                                  disabled={actionLoading}
+                                  title="Patient requested emergency priority: approve"
+                                >
+                                  Approve emergency
+                                </button>
+                                <button
+                                  className="qc-btn-cancel-row"
+                                  onClick={() => handleEmergencyDecision(appt, false)}
+                                  disabled={actionLoading}
+                                  title="Keep normal priority"
+                                >
+                                  Decline
+                                </button>
+                              </>
+                            )}
                             <button
                               className="qc-btn-call-row"
                               onClick={() => handleCallSpecificPatient(appt)}

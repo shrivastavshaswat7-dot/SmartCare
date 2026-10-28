@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import DashboardLayout from '../components/DashboardLayout'
+import { AVG_CONSULT_MINUTES, compareQueueOrder, estimateWaitMinutes, hasPendingEmergencyRequest } from '../lib/queue'
 import './PatientQueue.css'
 
 const formatTimeRange = (start, end, fallback) => {
@@ -15,9 +16,6 @@ const formatTimeRange = (start, end, fallback) => {
   }
   return `${format12(start)} – ${format12(end)}`
 }
-
-// Average consultation duration estimate (minutes)
-const AVG_CONSULT_MINUTES = 10
 
 function PatientQueue() {
   const { user } = useAuth()
@@ -63,65 +61,35 @@ function PatientQueue() {
         return
       }
 
-      // 3. For each active appointment, fetch the queue for that doctor + date
-      const results = []
-
-      for (const appt of myAppts) {
-        // Fetch all appointments for the same doctor + date that are still relevant
-        const { data: queueAppts, error: qErr } = await supabase
-          .from('appointments')
-          .select('id, token_number, priority, status')
-          .eq('doctor_id', appt.doctor_id)
-          .eq('appointment_date', appt.appointment_date)
-          .in('status', ['waiting', 'consulting'])
-
-        if (qErr) {
-          console.warn('Queue fetch warning:', qErr.message)
-          // If RLS blocks reading other patients' rows, report clearly
-          if (qErr.message.includes('policy') || qErr.code === '42501') {
-            setError(
-              `RLS policy prevents reading queue data: ${qErr.message}. ` +
-              'The appointments table RLS must allow patients to read rows ' +
-              'for the same doctor_id and appointment_date to compute queue position.'
-            )
-            return
-          }
-        }
-
-        const allQueue = queueAppts || [appt] // fallback to own appointment only
-
-        // Sort: emergency first (priority DESC), then token_number ASC
-        const sorted = [...allQueue].sort((a, b) => {
-          const prioA = (a.priority || 'normal').toLowerCase() === 'emergency' ? 0 : 1
-          const prioB = (b.priority || 'normal').toLowerCase() === 'emergency' ? 0 : 1
-          if (prioA !== prioB) return prioA - prioB
-          return (a.token_number || 0) - (b.token_number || 0)
-        })
-
-        // Determine currently serving token
-        const consultingAppt = sorted.find(a => a.status === 'consulting')
-        const currentlyServing = consultingAppt ? consultingAppt.token_number : null
-
-        // Find this patient's position in the sorted queue
-        const position = sorted.findIndex(a => a.id === appt.id) + 1
-        const estimatedWait = Math.max(0, (position - 1)) * AVG_CONSULT_MINUTES
-
-        results.push({
-          ...appt,
-          queuePosition: position,
-          totalInQueue: sorted.length,
-          currentlyServing,
-          estimatedWait,
-        })
+      // 3. Ask the database for this patient's queue position. The function only
+      //    returns counts for the caller's own appointments, never other patients' rows.
+      const { data: statusRows, error: statusErr } = await supabase.rpc('get_my_queue_status')
+      if (statusErr) {
+        console.warn('Queue position unavailable:', statusErr.message)
       }
+      const statusById = {}
+      ;(statusRows || []).forEach(s => { statusById[s.appointment_id] = s })
 
-      // Sort displayed queue items: emergency first, then token_number ascending
-      results.sort((a, b) => {
-        const prioA = (a.priority || 'normal').toLowerCase() === 'emergency' ? 0 : 1
-        const prioB = (b.priority || 'normal').toLowerCase() === 'emergency' ? 0 : 1
-        if (prioA !== prioB) return prioA - prioB
-        return (a.token_number || 0) - (b.token_number || 0)
+      const results = myAppts.map(appt => {
+        const s = statusById[appt.id]
+        if (!s) {
+          // Never guess a position from partial data
+          return { ...appt, queuePosition: null, totalInQueue: null, currentlyServing: null, estimatedWait: null }
+        }
+        return {
+          ...appt,
+          queuePosition: s.people_ahead + 1,
+          totalInQueue: s.waiting_total,
+          currentlyServing: s.now_serving,
+          estimatedWait: estimateWaitMinutes({
+            status: appt.status,
+            peopleAhead: s.people_ahead,
+            nowServing: s.now_serving,
+          }),
+        }
       })
+
+      results.sort(compareQueueOrder)
 
       setQueueItems(results)
       setLastRefreshed(new Date())
@@ -233,6 +201,9 @@ function PatientQueue() {
                     <span className={`queue-priority-tag ${(item.priority || 'normal').toLowerCase()}`}>
                       {item.priority || 'Normal'}
                     </span>
+                    {hasPendingEmergencyRequest(item) && (
+                      <span className="queue-priority-tag">Emergency requested</span>
+                    )}
                   </div>
 
                   {/* Queue metrics grid */}
@@ -251,10 +222,12 @@ function PatientQueue() {
                       <span className="metric-icon">📍</span>
                       <div className="metric-info">
                         <span className="metric-value">
-                          {isBeingServed ? 'Your turn!' : formatOrdinal(item.queuePosition)}
+                          {isBeingServed ? 'Your turn!' : item.queuePosition != null ? formatOrdinal(item.queuePosition) : '—'}
                         </span>
                         <span className="metric-label">
-                          {isBeingServed ? 'In consultation' : `of ${item.totalInQueue} in queue`}
+                          {isBeingServed ? 'In consultation'
+                            : item.queuePosition != null ? `of ${item.totalInQueue} waiting`
+                            : 'Live position unavailable'}
                         </span>
                       </div>
                     </div>
@@ -263,7 +236,7 @@ function PatientQueue() {
                       <span className="metric-icon">⏱️</span>
                       <div className="metric-info">
                         <span className="metric-value">
-                          {isBeingServed ? 'Now' : formatWaitTime(item.estimatedWait)}
+                          {isBeingServed ? 'Now' : item.estimatedWait != null ? formatWaitTime(item.estimatedWait) : '—'}
                         </span>
                         <span className="metric-label">Est. Wait Time</span>
                       </div>
