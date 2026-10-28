@@ -94,7 +94,10 @@ function AdminDashboard() {
   }, [selectedDate])
 
   useEffect(() => {
-    fetchAdminData()
+    const runFetch = async () => {
+      await fetchAdminData()
+    }
+    runFetch()
   }, [fetchAdminData])
 
   // Aggregate Stats
@@ -262,7 +265,7 @@ function AdminDashboard() {
           </div>
 
           <div className="doctor-cards-grid">
-            {doctorQueueStats.map(({ doctor, total, waiting, consulting, completed, emergencyWaiting }) => {
+            {doctorQueueStats.map(({ doctor, waiting, consulting, completed, emergencyWaiting }) => {
               const dept = departmentsMap[doctor.department_id]
               return (
                 <div key={doctor.id} className="doctor-queue-card">

@@ -146,11 +146,11 @@ npm install
 
 ### 3. Configure environment variables
 
-Duplicate `.env.example` as `.env` and add your Supabase project credentials.
+Create a `.env` file in the project root and add your Supabase project URL and publishable key (Supabase Dashboard → Project Settings → API Keys).
 
 ```env
 VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 ```
 
 Never commit your `.env` file or private credentials.

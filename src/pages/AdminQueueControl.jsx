@@ -35,7 +35,6 @@ function AdminQueueControl() {
 
   const [feedback, setFeedback] = useState(null) // { type: 'success' | 'error', message: '' }
   const [showPastSection, setShowPastSection] = useState(false)
-  const [lastRefreshed, setLastRefreshed] = useState(null)
 
   const adminNavItems = [
     { label: 'Overview', path: '/admin', icon: '📊' },
@@ -116,7 +115,6 @@ function AdminQueueControl() {
       }
 
       setAppointments(data || [])
-      setLastRefreshed(new Date())
     } catch (err) {
       console.error('Error fetching queue:', err)
       setFeedback({ type: 'error', message: 'Failed to load queue: ' + (err.message || 'Unknown error') })
@@ -347,7 +345,6 @@ function AdminQueueControl() {
 
   // Selected doctor details
   const activeDoctorObj = doctors.find(d => String(d.id) === String(selectedDoctor))
-  const activeDeptObj = activeDoctorObj ? departmentsMap[activeDoctorObj.department_id] : null
 
   return (
     <DashboardLayout
