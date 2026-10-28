@@ -101,6 +101,13 @@ The base tables (`profiles`, `departments`, `doctors`, `appointments`, `consulta
 
 Then check with `supabase_verify_readonly.sql` (read-only report) and `supabase_verify_behaviour.sql` (self-tests that always roll back).
 
+Files 5–6 and the two verify scripts can also be run from the terminal with the guarded runner, which only accepts those four files, runs each in one transaction, and rolls back unless `--apply` is given. It needs `SUPABASE_DB_URL` (Dashboard → Connect → Session pooler) in `.env.local`:
+
+```bash
+npm run db -- supabase_queue_status.sql            # dry run, rolled back
+npm run db -- supabase_queue_status.sql --apply    # commit
+```
+
 ### 4. Run
 ```bash
 npm run dev       # http://localhost:5173

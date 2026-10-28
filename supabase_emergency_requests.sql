@@ -85,6 +85,9 @@ CREATE TRIGGER trg_enforce_patient_booking_rules
   FOR EACH ROW
   EXECUTE FUNCTION public.enforce_patient_booking_rules();
 
+-- Make the API (PostgREST) see the new column immediately after commit
+NOTIFY pgrst, 'reload schema';
+
 -- Verify (read-only): expect the column and an enabled trigger
 SELECT 'column' AS kind, column_name || ' ' || data_type || ' default ' || column_default AS detail
   FROM information_schema.columns

@@ -27,6 +27,8 @@ npm run build    # production build
 | `supabase_verify_readonly.sql` | Lists live RLS policies, triggers, functions (security definer, anon access), indexes and whether the emergency column exists | No |
 | `supabase_verify_behaviour.sql` | Inserts disposable appointments on 2099-01-06 and checks: queue position (Q1–Q3), patient emergency insert is sanitised and patient priority updates are blocked (E1–E2), admin approval works (E3), duplicate same-day booking is rejected by `uq_patient_doctor_day_active` (D1) | No: it always ends with an error that carries the report, which rolls everything back. Only identity ids are consumed |
 
+Both can be run from the terminal with `npm run db -- <file>` (see README); the runner executes the file in one transaction and prints the result or report without showing the connection string.
+
 Run the behaviour script after `supabase_queue_status.sql` and `supabase_emergency_requests.sql`. E1–E2 are skipped until at least one account with `role = 'patient'` exists.
 
 **Status:** both scripts have been reviewed but not yet run against the hosted database.

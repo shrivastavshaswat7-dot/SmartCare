@@ -71,6 +71,9 @@ REVOKE ALL ON FUNCTION public.get_my_queue_status() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_my_queue_status() FROM anon;
 GRANT EXECUTE ON FUNCTION public.get_my_queue_status() TO authenticated;
 
+-- Make the API (PostgREST) see the new function immediately after commit
+NOTIFY pgrst, 'reload schema';
+
 -- Verify (read-only): expect one row, security_definer = true
 SELECT p.proname, p.prosecdef AS security_definer, p.proconfig AS settings,
        has_function_privilege('anon', p.oid, 'EXECUTE') AS anon_can_execute,
