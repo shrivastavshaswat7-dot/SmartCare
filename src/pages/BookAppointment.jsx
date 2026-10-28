@@ -294,7 +294,15 @@ function BookAppointment() {
         .select()
 
       if (insertErr) {
-        if (insertErr.code === '23505') throw new Error('This exact time slot has just been booked. Please choose another.')
+        if (insertErr.code === '23505') {
+          if (insertErr.message?.includes('uq_patient_doctor_day_active')) {
+            throw new Error('You already have an appointment with this doctor on this date. Please choose another date or doctor.')
+          }
+          if (insertErr.message?.includes('idx_uq_appointments_slot')) {
+            throw new Error('This exact time slot has just been booked. Please choose another.')
+          }
+          throw new Error('This appointment conflicts with an existing booking. Please refresh and try again.')
+        }
         throw insertErr
       }
 
