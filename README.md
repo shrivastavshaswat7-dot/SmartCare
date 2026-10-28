@@ -1,195 +1,135 @@
-# SmartCare — Hospital Appointment & Queue Management System
+# SmartCare — Hospital Appointment & Queue Management
 
-SmartCare is a role-based hospital appointment and queue management system designed to simplify appointment booking, token generation, queue management, and consultation workflows.
+SmartCare is a college project exploring full-stack development, authentication, PostgreSQL database design, Row Level Security, appointment scheduling and queue management.
 
-The system provides separate workflows for **Patients, Doctors, and Administrators**, with authentication and database access secured using Supabase Authentication and Row Level Security (RLS).
+Patients book appointments and follow their place in the queue, doctors run their consultation queue and write notes and prescriptions, and administrators control every doctor's queue.
 
-## 🚀 Live Demo
+**Live demo:** https://smart-care-black.vercel.app
 
-[SmartCare — Live Demo](https://smart-care-ixtawacsw-shrivastavshaswat7-8842.vercel.app/login)
+> Educational project. Use fictional data only. It is not a medical system: "emergency" is a queue-ordering flag, not clinical triage.
 
-> Demo application for educational/project purposes. Use dummy credentials and data.
+## Features
 
-## ✨ Features
+**Patient**
+- Register, sign in, sign out
+- Book by department, date and 15-minute slot (doctor schedules from `doctor_schedules`)
+- New or follow-up visits (follow-up reuses the previous doctor)
+- Database-generated queue token for every booking
+- Live queue position, "now serving" token and estimated wait
+- Emergency/urgent *request* that a doctor or admin must approve (after the emergency migration)
 
-### 👤 Patient
+**Doctor**
+- Today's queue, emergency-first ordering
+- Start / complete consultations, mark absent
+- Consultation notes and prescriptions, consultation history
+- Approve or decline emergency requests
 
-* Patient registration and login
-* Browse departments and doctors
-* Book appointments
-* Select appointment date and time
-* Normal and emergency priority handling
-* Automatic appointment token generation
-* View queue status and estimated waiting time
-* View appointment and consultation information
-* Secure patient-specific data access
+**Administrator**
+- Overview of all doctors' queues and daily counts
+- Queue control: call next / specific patient, complete, cancel
+- Approve or decline emergency requests
 
-### 👨‍⚕️ Doctor
+**Data integrity**
+- One non-cancelled appointment per patient, doctor and day (`uq_patient_doctor_day_active`)
+- One patient per doctor, date and slot (`idx_uq_appointments_slot`)
+- Concurrency-safe token numbers (`assign_token_number()` trigger + `uq_doctor_date_token`)
+- Role checks in the database (RLS + triggers), not only in the UI
 
-* Dedicated doctor authentication
-* Doctor dashboard
-* View assigned appointments and queue
-* Call the next patient
-* Manage consultation workflow
-* Add consultation notes and prescription
-* Access doctor-specific appointment information
+## Tech stack
 
-### 🛠️ Administrator
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, React Router 7, Vite 8, plain CSS |
+| Backend | Supabase (PostgreSQL, Auth, Row Level Security, SQL functions/triggers) — no custom server |
+| Hosting | Vercel (auto-deploys `main` from GitHub) |
+| Tests | Node's built-in test runner (`node --test`) |
 
-* Dedicated admin authentication
-* Monitor hospital appointments and queues
-* Manage queue operations
-* View operational statistics
-* Administrative access protected by role-based authorization
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design.
 
-## 🔐 Security
-
-* Supabase Authentication for user authentication
-* Role-based access control for Patient, Doctor, and Admin users
-* PostgreSQL Row Level Security (RLS)
-* Patient data restricted to the authenticated patient
-* Doctor access restricted to assigned appointments
-* Consultation records protected against cross-doctor access
-* Protected frontend routes for role-specific dashboards
-
-## 🧠 Queue & Token Management
-
-SmartCare generates doctor-specific appointment tokens and maintains queue ordering based on appointment priority and token number.
-
-Example:
-
-```text
-Emergency
-   ↓
-Priority-based queue
-   ↓
-Token ordering
-   ↓
-Doctor calls next patient
-   ↓
-Consultation
-   ↓
-Completed
-```
-
-The system also provides an estimated waiting time based on the current queue. This is an estimate and not a guaranteed waiting time.
-
-## 🏗️ System Architecture
-
-```text
-┌──────────────────────┐
-│    React Frontend    │
-│      Vite + JSX      │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│   Supabase Services  │
-│ Auth + Database + RLS│
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│  PostgreSQL Database │
-└──────────────────────┘
-
-GitHub ───────► Vercel
-                  │
-                  ▼
-             Production App
-```
-
-## 🛠️ Tech Stack
-
-| Technology       | Purpose                     |
-| ---------------- | --------------------------- |
-| React            | Frontend UI                 |
-| Vite             | Development & build tooling |
-| JavaScript / JSX | Application logic           |
-| CSS              | Styling & responsive UI     |
-| Supabase Auth    | Authentication              |
-| PostgreSQL       | Database                    |
-| Supabase RLS     | Data access control         |
-| Git & GitHub     | Version control             |
-| Vercel           | Deployment                  |
-
-## 📂 Project Structure
+## Project structure
 
 ```text
 src/
-├── components/
-├── context/
-├── lib/
-├── pages/
-├── App.jsx
-├── App.css
-├── index.css
-└── main.jsx
-
-public/
+├── components/   route guards (ProtectedRoute, DoctorRoute, AdminRoute), DashboardLayout
+├── context/      AuthContext (session + role)
+├── lib/          supabase client, queue rules, booking error messages, role routing
+├── pages/        Login, Register, patient / doctor / admin pages
+└── main.jsx, App.jsx
+tests/            unit tests (node --test)
+docs/             architecture, demo guide, demo accounts, testing
+supabase_*.sql    database setup, migrations and verification scripts
 ```
 
-## ⚙️ Local Setup
+## Scope
+Appointment scheduling, doctor-wise tokens, queue management, priority handling, consultation records and role-based workflows. Billing, pharmacy, ambulance management and payments are intentionally out of scope.
 
-### 1. Clone the repository
+## Getting started
 
+### Prerequisites
+- Node.js 20 or newer (developed on Node 24) and npm
+- A Supabase project
+
+### 1. Install
 ```bash
-git clone https://github.com/shrivastavshaswat7-dot/SmartCare
+git clone https://github.com/shrivastavshaswat7-dot/SmartCare.git
 cd SmartCare
-```
-
-### 2. Install dependencies
-
-```bash
 npm install
 ```
 
-### 3. Configure environment variables
-
-Create a `.env` file in the project root and add your Supabase project URL and publishable key (Supabase Dashboard → Project Settings → API Keys).
-
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
-```
-
-Never commit your `.env` file or private credentials.
-
-### 4. Set up the database
-
-Run the provided `supabase_rls.sql` through the Supabase SQL Editor to configure the required database policies, triggers, and security rules.
-
-### 5. Start the development server
-
+### 2. Environment variables
 ```bash
-npm run dev
+cp .env.example .env
+```
+Fill in `.env`:
+
+| Variable | Where to find it | Exposed to browser? |
+|---|---|---|
+| `VITE_SUPABASE_URL` | Supabase → Project Settings → API | Yes (public) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys → publishable key (`sb_publishable_…`) | Yes (public, protected by RLS) |
+
+Never put a secret/service-role key in any `VITE_` variable — Vite bundles those into the public JavaScript. `.env`, `.env.local` and other `.env.*` files are gitignored.
+
+### 3. Database
+The base tables (`profiles`, `departments`, `doctors`, `appointments`, `consultations`) were created in the Supabase dashboard and are **not** yet scripted in this repo (see Known limitations). With those in place, run these files in the Supabase SQL Editor, in order:
+
+1. `supabase_seed.sql` — departments and doctors (fictional)
+2. `supabase_rls.sql` — RLS policies, role-protection trigger, token trigger, consultations table
+3. `supabase_time_slots.sql` — slots, visit types, doctor schedules
+4. `supabase_one_booking_per_day.sql` — one active booking per patient/doctor/day
+5. `supabase_queue_status.sql` — `get_my_queue_status()` for patient queue position
+6. `supabase_emergency_requests.sql` — emergency requests need staff approval
+
+Then check with `supabase_verify_readonly.sql` (read-only report) and `supabase_verify_behaviour.sql` (self-tests that always roll back).
+
+### 4. Run
+```bash
+npm run dev       # http://localhost:5173
+npm test          # unit tests
+npm run lint
+npm run build     # production build in dist/
+npm run preview   # serve the production build
 ```
 
-The application will be available at:
+Demo accounts: see [docs/DEMO_ACCOUNTS.md](docs/DEMO_ACCOUNTS.md). Presentation script: [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md). Testing: [docs/TESTING.md](docs/TESTING.md).
 
-```text
-http://localhost:5173
-```
+## Deployment
+The Vercel project is connected to this GitHub repository: every push to `main` builds and deploys production automatically. `vercel.json` rewrites all paths to `index.html` so client-side routes work on refresh. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for Production and Preview in Vercel → Project → Settings → Environment Variables; changing them requires a redeploy because Vite inlines them at build time.
 
-## 🎯 Project Scope
+## Troubleshooting
 
-SmartCare focuses on:
+| Symptom | Likely cause |
+|---|---|
+| Blank data / "Invalid API key" | Wrong or disabled key in `VITE_SUPABASE_PUBLISHABLE_KEY`; legacy anon JWT keys are disabled on the hosted project |
+| "Live position unavailable" on the queue page | `supabase_queue_status.sql` has not been run |
+| "You already have an appointment with this doctor on this date" | Expected: one active booking per patient/doctor/day |
+| Deep link returns 404 on Vercel | `vercel.json` rewrite missing |
+| Signed in but sent to another dashboard | The account's `profiles.role` differs from the login tab chosen |
 
-* Hospital appointment scheduling
-* Doctor-wise token generation
-* Queue management
-* Priority-based queue handling
-* Doctor consultation records
-* Role-based hospital workflows
+## Known limitations
+- Base table DDL is not in the repo yet; export it with `supabase db dump --schema-only` before recreating the project elsewhere.
+- No automated browser (end-to-end) tests; signed-in flows are checked manually (see docs/TESTING.md).
+- Estimated wait uses a fixed 10 minutes per consultation.
+- Patients cannot cancel their own appointments in the UI; doctors and admins can.
 
-The project does not attempt to replace a complete hospital ERP system and intentionally excludes areas such as billing, pharmacy management, ambulance management, and online payments.
-
-## 📌 Project Status
-
-**Production deployed and functional.**
-
-Built as a college project to explore full-stack application development, authentication, PostgreSQL database design, Row Level Security, queue management, and production deployment.
-
-## 📄 License
-
-MIT License
+## License
+No license has been chosen yet; all rights reserved by the author.
