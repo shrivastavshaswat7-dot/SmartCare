@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { guardRedirect } from '../lib/roleRoutes'
 
 function ProtectedRoute({ children }) {
   const { user, role, loading } = useAuth()
@@ -8,16 +9,9 @@ function ProtectedRoute({ children }) {
     return <div className="loading">Loading...</div>
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />
-  }
-
-  if (role === 'admin') {
-    return <Navigate to="/admin" replace />
-  }
-
-  if (role === 'doctor') {
-    return <Navigate to="/doctor" replace />
+  const redirect = guardRedirect('patient', { user, role })
+  if (redirect) {
+    return <Navigate to={redirect} replace />
   }
 
   return children

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { homeForRole } from '../lib/roleRoutes'
 
 import './Auth.css'
 
@@ -37,13 +38,7 @@ function Login() {
     }
 
     // Navigate to appropriate dashboard based on exact role match
-    if (actualRole === 'admin') {
-      navigate('/admin')
-    } else if (actualRole === 'doctor') {
-      navigate('/doctor')
-    } else {
-      navigate('/')
-    }
+    navigate(homeForRole(actualRole))
   }
 
   return (

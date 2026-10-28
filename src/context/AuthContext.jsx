@@ -35,10 +35,11 @@ export function AuthProvider({ children }) {
 
     // Listen for auth state changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         const currentUser = session?.user ?? null
         setUser(currentUser)
-        if (currentUser) await fetchRole(currentUser.id)
+        // Supabase calls inside this callback can deadlock supabase-js; run them afterwards
+        if (currentUser) setTimeout(() => fetchRole(currentUser.id), 0)
         else setRole(null)
       }
     )
