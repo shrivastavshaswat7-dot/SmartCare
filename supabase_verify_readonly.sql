@@ -19,7 +19,7 @@ SELECT 'rls enabled', c.relname || ' = ' || c.relrowsecurity
  WHERE c.relnamespace = 'public'::regnamespace
    AND c.relname IN ('appointments', 'profiles', 'doctors', 'departments', 'consultations', 'doctor_schedules')
 UNION ALL
-SELECT 'trigger', c.relname || '.' || t.tgname || ' enabled=' || t.tgenabled
+SELECT 'trigger', c.relname || '.' || t.tgname || ' enabled=' || t.tgenabled::text
   FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid
  WHERE c.relnamespace = 'public'::regnamespace AND NOT t.tgisinternal
 UNION ALL

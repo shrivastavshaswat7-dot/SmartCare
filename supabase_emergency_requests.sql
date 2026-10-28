@@ -90,6 +90,6 @@ SELECT 'column' AS kind, column_name || ' ' || data_type || ' default ' || colum
   FROM information_schema.columns
  WHERE table_schema = 'public' AND table_name = 'appointments' AND column_name = 'emergency_requested'
 UNION ALL
-SELECT 'trigger', tgname || ' enabled=' || tgenabled
+SELECT 'trigger', tgname || ' enabled=' || tgenabled::text
   FROM pg_trigger
  WHERE tgrelid = 'public.appointments'::regclass AND tgname = 'trg_enforce_patient_booking_rules';
