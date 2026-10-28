@@ -10,8 +10,9 @@
 --   INSERT: status is forced to 'waiting'; priority 'emergency' is stored
 --           as priority 'normal' + emergency_requested = true;
 --           follow_up_of must point to the patient's own appointment.
---   UPDATE: (only possible if some UPDATE policy allows it) changes to
---           priority, status, patient, doctor, date, slot or token are rejected.
+--   UPDATE: the live database has a "Patients can update their own
+--           appointments" policy with no column limits; the trigger rejects
+--           any patient change except the emergency_requested flag.
 -- Admins, doctors and server scripts (auth.uid() IS NULL) are unchanged.
 -- Staff approve with:
 --   UPDATE appointments SET priority = 'emergency', emergency_requested = false WHERE id = ...
@@ -64,14 +65,10 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- UPDATE by a patient: protected fields may not change
-  IF NEW.priority IS DISTINCT FROM OLD.priority
-     OR NEW.status IS DISTINCT FROM OLD.status
-     OR NEW.patient_id IS DISTINCT FROM OLD.patient_id
-     OR NEW.doctor_id IS DISTINCT FROM OLD.doctor_id
-     OR NEW.appointment_date IS DISTINCT FROM OLD.appointment_date
-     OR NEW.slot_start IS DISTINCT FROM OLD.slot_start
-     OR NEW.token_number IS DISTINCT FROM OLD.token_number THEN
+  -- UPDATE by a patient (the live "Patients can update their own appointments"
+  -- policy allows it): the only field a patient may change is their emergency
+  -- request flag. Priority, status, schedule, token, doctor etc. stay as they are.
+  IF (to_jsonb(NEW) - 'emergency_requested') IS DISTINCT FROM (to_jsonb(OLD) - 'emergency_requested') THEN
     RAISE EXCEPTION 'Patients cannot change appointment priority, status or schedule'
       USING ERRCODE = '42501';
   END IF;

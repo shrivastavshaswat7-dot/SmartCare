@@ -70,24 +70,65 @@ BEGIN
   report := report || 'Q3 own-rows-only=' || CASE WHEN (SELECT COUNT(*) FROM public.get_my_queue_status()) = 1
                                                   THEN 'PASS' ELSE 'FAIL' END || '; ';
 
-  -- E1/E2: a patient booking "emergency" + "completed" is stored as a normal waiting request
+  -- T1: tokens are assigned 1..4 in booking order for one doctor and day
+  report := report || 'T1 token-sequence=' || CASE WHEN (
+      SELECT array_agg(token_number ORDER BY slot_start) FROM public.appointments
+       WHERE doctor_id = doc AND appointment_date = test_day) = ARRAY[1, 2, 3, 4]
+    THEN 'PASS' ELSE 'FAIL' END || '; ';
+
+  -- E1-E6: the trigger's patient path. The caller is a random id that matches
+  -- no profile, so is_admin() and is_doctor() are false - exactly like a
+  -- patient - without needing a real patient account. The row is attached to
+  -- an existing profile (p1) on a second doctor so the FK holds. RLS is not
+  -- part of this test (the SQL Editor role bypasses it); the trigger is.
+  pat_id := gen_random_uuid();
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', pat_id, 'role', 'authenticated')::text, true);
+  PERFORM set_config('request.jwt.claim.sub', pat_id::text, true);
+
+  INSERT INTO public.appointments (patient_id, doctor_id, appointment_date, appointment_time, slot_start, slot_end, status, priority, visit_type)
+    VALUES (p1, doc2, test_day, '11:00', '11:00', '11:15', 'completed', 'emergency', 'new')
+    RETURNING id, priority, status, emergency_requested INTO ins;
+  report := report || 'E1 patient-insert-sanitised=' || CASE WHEN ins.priority = 'normal' AND ins.status = 'waiting' AND ins.emergency_requested
+                                                            THEN 'PASS' ELSE 'FAIL' END || '; ';
+
+  BEGIN
+    UPDATE public.appointments SET priority = 'emergency' WHERE id = ins.id;
+    report := report || 'E2 patient-priority-update-blocked=FAIL; ';
+  EXCEPTION WHEN insufficient_privilege THEN
+    report := report || 'E2 patient-priority-update-blocked=PASS; ';
+  END;
+
+  BEGIN
+    UPDATE public.appointments SET status = 'completed', slot_start = '11:30' WHERE id = ins.id;
+    report := report || 'E4 patient-status-schedule-update-blocked=FAIL; ';
+  EXCEPTION WHEN insufficient_privilege THEN
+    report := report || 'E4 patient-status-schedule-update-blocked=PASS; ';
+  END;
+
+  BEGIN
+    UPDATE public.appointments SET emergency_requested = false WHERE id = ins.id;
+    report := report || 'E5 patient-may-withdraw-request=PASS; ';
+  EXCEPTION WHEN OTHERS THEN
+    report := report || 'E5 patient-may-withdraw-request=FAIL; ';
+  END;
+
+  BEGIN
+    INSERT INTO public.appointments (patient_id, doctor_id, appointment_date, appointment_time, slot_start, slot_end, status, priority, visit_type, follow_up_of)
+      VALUES (p1, doc2, test_day, '11:30', '11:30', '11:45', 'waiting', 'normal', 'follow_up', a3);
+    report := report || 'E6 foreign-follow-up-rejected=FAIL; ';
+  EXCEPTION WHEN insufficient_privilege THEN
+    report := report || 'E6 foreign-follow-up-rejected=PASS; ';
+  END;
+
+  -- E7: the appointment's own doctor can still change status
+  SELECT user_id INTO pat_id FROM public.doctors WHERE id = doc;
   IF pat_id IS NULL THEN
-    report := report || 'E1-E2 SKIPPED (no profile with role=patient); ';
+    report := report || 'E7 SKIPPED (doctor not linked to an account); ';
   ELSE
     PERFORM set_config('request.jwt.claims', json_build_object('sub', pat_id, 'role', 'authenticated')::text, true);
     PERFORM set_config('request.jwt.claim.sub', pat_id::text, true);
-    INSERT INTO public.appointments (patient_id, doctor_id, appointment_date, appointment_time, slot_start, slot_end, status, priority, visit_type)
-      VALUES (pat_id, doc2, test_day, '11:00', '11:00', '11:15', 'completed', 'emergency', 'new')
-      RETURNING priority, status, emergency_requested INTO ins;
-    report := report || 'E1 patient-insert-sanitised=' || CASE WHEN ins.priority = 'normal' AND ins.status = 'waiting' AND ins.emergency_requested
-                                                              THEN 'PASS' ELSE 'FAIL' END || '; ';
-    BEGIN
-      UPDATE public.appointments SET priority = 'emergency'
-       WHERE patient_id = pat_id AND doctor_id = doc2 AND appointment_date = test_day AND slot_start = '11:00';
-      report := report || 'E2 patient-update-blocked=FAIL; ';
-    EXCEPTION WHEN insufficient_privilege THEN
-      report := report || 'E2 patient-update-blocked=PASS; ';
-    END;
+    UPDATE public.appointments SET status = 'completed' WHERE id = a1 RETURNING status INTO ins;
+    report := report || 'E7 doctor-status-update=' || CASE WHEN ins.status = 'completed' THEN 'PASS' ELSE 'FAIL' END || '; ';
   END IF;
 
   -- E3: an admin can still set emergency priority
