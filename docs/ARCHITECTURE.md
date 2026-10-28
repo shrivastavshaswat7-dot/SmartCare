@@ -77,7 +77,7 @@ Cancelled appointments keep their token number; tokens are never reused for that
 
 ## Emergency requests
 
-Patients can ask for emergency priority; they cannot grant it. After `supabase_emergency_requests.sql`, the request is stored as `emergency_requested = true` and the doctor queue and admin queue show **Approve emergency / Decline** buttons. Approval sets `priority = 'emergency'`. The trigger also blocks patients from changing priority, status, schedule or token through any UPDATE path. "Emergency" orders the queue only; it is not medical triage.
+Patients can ask for emergency priority; they cannot grant it. After `supabase_emergency_requests.sql`, the request is stored as `emergency_requested = true` and the doctor queue and admin queue show **Approve emergency / Decline** buttons. Approval sets `priority = 'emergency'`. The live database has a "Patients can update their own appointments" RLS policy with no column limits, so the trigger also rejects any patient UPDATE that changes anything other than the `emergency_requested` flag (priority, status, schedule, token, doctor and follow-up stay as they are). "Emergency" orders the queue only; it is not medical triage.
 
 ## Database files
 
@@ -89,5 +89,7 @@ Patients can ask for emergency priority; they cannot grant it. After `supabase_e
 | `supabase_one_booking_per_day.sql` | `uq_patient_doctor_day_active` |
 | `supabase_queue_status.sql` | `get_my_queue_status()` |
 | `supabase_emergency_requests.sql` | emergency request column and trigger |
+| `supabase_emergency_requests_rollback.sql` | undo of the emergency migration (only if ever needed) |
+| `supabase_inspect_readonly.sql` | read-only dump of live function definitions, grants, constraints, triggers and policies |
 | `supabase_verify_readonly.sql` | read-only report of live policies, triggers, functions and indexes |
 | `supabase_verify_behaviour.sql` | self-tests that always roll back |

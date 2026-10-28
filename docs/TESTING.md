@@ -25,13 +25,19 @@ npm run build    # production build
 | Script | What it does | Changes data? |
 |---|---|---|
 | `supabase_verify_readonly.sql` | Lists live RLS policies, triggers, functions (security definer, anon access), indexes and whether the emergency column exists | No |
-| `supabase_verify_behaviour.sql` | Inserts disposable appointments on 2099-01-06 and checks: queue position (Q1–Q3), patient emergency insert is sanitised and patient priority updates are blocked (E1–E2), admin approval works (E3), duplicate same-day booking is rejected by `uq_patient_doctor_day_active` (D1) | No: it always ends with an error that carries the report, which rolls everything back. Only identity ids are consumed |
+| `supabase_inspect_readonly.sql` | Live function definitions, grants, columns, constraints, triggers, policies and aggregate counts (READ ONLY transaction) | No |
+| `supabase_verify_behaviour.sql` | Inserts disposable appointments on 2099-01-06 and checks: queue position, emergency-first order and own-rows-only (Q1–Q3), token sequence (T1), patient insert sanitised (E1), patient priority / status / schedule updates blocked (E2, E4), patient may withdraw a request (E5), follow-up of another patient rejected (E6), doctor status update (E7), admin approval (E3), duplicate same-day booking rejected by `uq_patient_doctor_day_active` (D1) | No: it always ends with an error that carries the report, which rolls everything back. Only identity ids are consumed |
 
 Both can be run from the terminal with `npm run db -- <file>` (see README); the runner executes the file in one transaction and prints the result or report without showing the connection string.
 
-Run the behaviour script after `supabase_queue_status.sql` and `supabase_emergency_requests.sql`. E1–E2 are skipped until at least one account with `role = 'patient'` exists.
+Run the behaviour script after `supabase_queue_status.sql` and `supabase_emergency_requests.sql`. The patient-path tests use a random user id that matches no profile (so it is neither admin nor doctor); they test the trigger, not RLS, and need no patient account.
 
-**Status:** both scripts have been reviewed but not yet run against the hosted database.
+### Last verified results against the hosted database (2026-10-29)
+- `get_my_queue_status()`: already present; live definition identical to `supabase_queue_status.sql`; security definer, `search_path=public`, anon cannot execute, authenticated can
+- `supabase_emergency_requests.sql`: dry run OK, then applied (column `emergency_requested`, trigger `trg_enforce_patient_booking_rules` enabled)
+- `supabase_verify_behaviour.sql`: Q1, Q2, Q3, T1, E1, E2, E3, E4, E5, E6, E7, D1 all PASS; 0 rows left on the test date
+- Public API: anon `select emergency_requested` returns 200 (schema cache refreshed); anon call to `get_my_queue_status` is refused (42501)
+- Not covered: RLS as a real signed-in patient (no patient account exists yet), and the browser UI while signed in
 
 ## Manual checks (signed-in flows)
 These need real accounts and have **not** been automated. Use fictional accounts only.

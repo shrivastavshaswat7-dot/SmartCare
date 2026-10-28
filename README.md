@@ -16,7 +16,7 @@ Patients book appointments and follow their place in the queue, doctors run thei
 - New or follow-up visits (follow-up reuses the previous doctor)
 - Database-generated queue token for every booking
 - Live queue position, "now serving" token and estimated wait
-- Emergency/urgent *request* that a doctor or admin must approve (after the emergency migration)
+- Emergency/urgent *request* that a doctor or admin must approve
 
 **Doctor**
 - Today's queue, emergency-first ordering
@@ -101,7 +101,7 @@ The base tables (`profiles`, `departments`, `doctors`, `appointments`, `consulta
 
 Then check with `supabase_verify_readonly.sql` (read-only report) and `supabase_verify_behaviour.sql` (self-tests that always roll back).
 
-Files 5–6 and the two verify scripts can also be run from the terminal with the guarded runner, which only accepts those four files, runs each in one transaction, and rolls back unless `--apply` is given. It needs `SUPABASE_DB_URL` (Dashboard → Connect → Session pooler) in `.env.local`:
+Files 5–6, the verify scripts, `supabase_inspect_readonly.sql` (live definitions, grants and policies) and `supabase_emergency_requests_rollback.sql` can also be run from the terminal with the guarded runner. It only accepts those files (never `supabase_one_booking_per_day.sql`), runs each in one transaction (read-only files in a READ ONLY transaction), and rolls back unless `--apply` is given. It needs `SUPABASE_DB_URL` (Dashboard → Connect → Session pooler) in `.env.local`:
 
 ```bash
 npm run db -- supabase_queue_status.sql            # dry run, rolled back
